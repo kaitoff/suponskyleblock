@@ -32,13 +32,14 @@ class Create
             $initialSize = $this->plugin->cfg->get("Island Size");
             $senderName = strtolower($sender->getName());
 
-            // Kiểm tra xem người gửi lệnh có phải là người chơi không
-            if (!$sender instanceof Player) {
-                $sender->sendMessage($this->plugin->NCDPrefix . "§cLệnh này chỉ có thể được sử dụng bởi người chơi.");
-                return true;
-            }
+           if ($sender instanceof Player) {
+    $this->plugin->NCDMenuForm($sender, "", $this->plugin);
+} else {
+    $sender->sendMessage($this->plugin->NCDPrefix . "Lệnh này chỉ có thể được sử dụng bởi người chơi.");
+    return true;
+}
 
-            // Kiểm tra xem thế giới đã được tải chưa
+
             $level = $this->plugin->getServer()->getWorldManager()->getWorldByName($levelName);
             if (!$level) {
                 $sender->sendMessage($this->plugin->NCDPrefix . "§cThế giới SkyBlock chưa được tải. Vui lòng thử lại sau.");
@@ -50,16 +51,13 @@ class Create
                 return true;
             }
 
-            // Tính toán vị trí đảo mới
             $islandX = $islands * $interval + ($this->plugin->skyblock->get("CustomX") ?? 0);
             $islandZ = $islands * $interval + ($this->plugin->skyblock->get("CustomZ") ?? 0);
-            $islandY = 15 + ($this->plugin->skyblock->get("CustomY") ?? 3); // Đặt giá trị mặc định cho CustomY là 3
+            $islandY = 15 + ($this->plugin->skyblock->get("CustomY") ?? 3);
 
-            // Dịch chuyển người chơi đến đảo mới và chuyển sang chế độ Spectator
             $sender->teleport(new Position($islandX, $islandY, $islandZ, $level));
             $sender->setGamemode(GameMode::SPECTATOR());
 
-            // Lên lịch tạo đảo sau một khoảng thời gian ngắn
             $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
 
             // Thêm vật phẩm vào inventory
