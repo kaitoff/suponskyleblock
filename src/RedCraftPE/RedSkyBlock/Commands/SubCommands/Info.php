@@ -54,7 +54,7 @@ class Info
 				"§l§c↣ §aTình trạng đảo: §f{$isLocked}\n");
           return true;
         } else {
-          $this->plugin->NCDInfoForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông có đảo nào cả..");
+       SkyBlock::getInstance()->NCDInfoForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông có đảo nào cả..", SkyBlock::getInstance()); // Thêm tham số SkyBlock::getInstance()
           return true;
         }
       }
