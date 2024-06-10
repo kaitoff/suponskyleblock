@@ -65,6 +65,7 @@ class SkyBlock extends PluginBase implements Listener {
   public function onCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
         return $this->island->onIslandCommand($sender, $command, $label, $args);
     }
+  
 
 
   //API FUNCTIONS:
@@ -168,8 +169,8 @@ class SkyBlock extends PluginBase implements Listener {
         return "{$length} x {$width}";
     }
 	
-	public function NCDMenuForm(Player $player, string $text) {
-		$form = new SimpleForm(function (Player $player, ?int $data = null) {
+	 public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) {
+        $form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
 			$result = $data;
 			if ($result === null) {
 				return;
@@ -203,9 +204,9 @@ class SkyBlock extends PluginBase implements Listener {
 		return $form;
 	}
 	
-	public function NCDWarpForm($player, string $text)
-	{
-		$form = new CustomForm(function(Player $player, $data) {
+	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin) {
+        $form = new CustomForm(function(Player $player, $data) use ($plugin) {
+      
 			$result = $data;
 			if ($result === null) {
 				$this->NCDMenuForm($player, "");
@@ -224,8 +225,8 @@ class SkyBlock extends PluginBase implements Listener {
 		$form->sendToPlayer($player);
 	}
 	
-	public function NCDInfoForm($player, string $text)
-	{
+	 public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin) {
+   
 		$list = [];
 		foreach ($this->getServer()->getOnlinePlayers() as $p) {
 			$list[] = $p->getName();
