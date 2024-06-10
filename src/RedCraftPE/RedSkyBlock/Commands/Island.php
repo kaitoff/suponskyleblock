@@ -84,12 +84,7 @@ class Island
     {
         if ($sender->hasPermission("skyblock.is")) {
             if (empty($args)) {
-                if ($sender instanceof Player) {
                     return $this->help->onHelpCommand($sender, $args);
-                } else {
-                    $sender->sendMessage($this->plugin->NCDPrefix . "Lệnh này chỉ có thể được sử dụng bởi người chơi.");
-                    return true;
-                }
             } else {
                 switch (strtolower($args[0])) {
                     case "ncdadd":
@@ -98,12 +93,7 @@ class Island
                     case "ncdexpel":
                         return $this->ban->onBanCommand($sender, $args);
                     case "ncdcreate":
-                        if ($sender instanceof Player) { 
                             return $this->create->onCreateCommand($sender);
-                        } else {
-                            $sender->sendMessage($this->plugin->NCDPrefix . "Lệnh này chỉ có thể được sử dụng bởi người chơi.");
-                            return true;
-                        }
                     case "ncdcw":
                     case "ncdcreateworld":
                         return $this->createWorld->onCreateWorldCommand($sender, $args);
