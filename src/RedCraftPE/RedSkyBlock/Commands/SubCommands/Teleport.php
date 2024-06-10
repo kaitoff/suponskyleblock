@@ -48,7 +48,7 @@ class Teleport {
 
             return true;
         } else {
-            if ($sender->hasPermission("skyblock.tp")) {
+           if ($sender->hasPermission("skyblock.tp")) {
                 $name = strtolower(implode(" ", array_slice($args, 1)));
 
                 if (array_key_exists($name, $skyblockArray)) {
