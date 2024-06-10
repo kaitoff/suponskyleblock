@@ -50,8 +50,7 @@ class Top
     }
 
     // CODE FORM BY NGUYỄN CÔNG DANH (NCD)
-    public function NCDTopForm(Player $sender, string $text, SkyBlock $plugin) // Thêm tham số SkyBlock $plugin
-    {
+   public function showTopForm(Player $sender, string $text) {
         $form = new SimpleForm(function (Player $sender, ?int $data = null) use ($plugin) { // Sử dụng use ($plugin)
             if ($data === null) {
                 return;
