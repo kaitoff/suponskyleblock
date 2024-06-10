@@ -42,7 +42,7 @@ use RedCraftPE\RedSkyBlock\Commands\SubCommands\VoidClass;
 class Island {
 
   private static $instance;
-
+  private $plugin;
   private $add;
   private $ban;
   private $create;
@@ -76,44 +76,41 @@ class Island {
   private $unlock;
   private $void;
 
-  public function __construct($plugin) {
+  public function __construct(SkyBlock $plugin) {
+   $this->plugin = $plugin; 
 
-    self::$instance = $this;
-
-    $this->plugin = $plugin;
-
-    $this->add = new Add();
-    $this->ban = new Ban();
-    $this->create = new Create();
-    $this->createWorld = new CreateWorld($this->plugin);
-    $this->custom = new Custom();
-    $this->decrease = new Decrease();
-    $this->delete = new Delete();
-    $this->fly = new Fly();
-    $this->help = new Help();
-    $this->hunger = new Hunger();
-    $this->increase = new Increase();
-    $this->info = new Info();
-    $this->kick = new Kick();
-    $this->lock = new Lock();
-    $this->makeSpawn = new MakeSpawn();
-    $this->members = new Members();
-    $this->name = new Name();
-    $this->pos1 = new Pos1();
-    $this->pos2 = new Pos2();
-    $this->rank = new Rank();
-    $this->reload = new Reload();
-    $this->remove = new Remove();
-    $this->reset = new Reset();
-    $this->set = new Set();
-    $this->setSpawn = new SetSpawn();
-    $this->settings = new Settings();
-    $this->setWorld = new SetWorld();
-    $this->teleport = new Teleport();
-    $this->top = new Top();
-    $this->unban = new Unban();
-    $this->unlock = new Unlock();
-    $this->void = new VoidClass();
+        $this->add = new Add($plugin);
+        $this->ban = new Ban($plugin);
+        $this->create = new Create($plugin);
+        $this->createWorld = new CreateWorld($plugin);
+        $this->custom = new Custom($plugin);
+        $this->decrease = new Decrease($plugin);
+        $this->delete = new Delete($plugin);
+        $this->fly = new Fly($plugin);
+        $this->help = new Help($plugin);
+        $this->hunger = new Hunger($plugin);
+        $this->increase = new Increase($plugin);
+        $this->info = new Info($plugin);
+        $this->kick = new Kick($plugin);
+        $this->lock = new Lock($plugin);
+        $this->makeSpawn = new MakeSpawn($plugin);
+        $this->members = new Members($plugin);
+        $this->name = new Name($plugin);
+        $this->pos1 = new Pos1($plugin);
+        $this->pos2 = new Pos2($plugin);
+        $this->rank = new Rank($plugin);
+        $this->reload = new Reload($plugin);
+        $this->remove = new Remove($plugin);
+        $this->reset = new Reset($plugin);
+        $this->set = new Set($plugin);
+        $this->setSpawn = new SetSpawn($plugin);
+        $this->settings = new Settings($plugin);
+        $this->setWorld = new SetWorld($plugin);
+        $this->teleport = new Teleport($plugin);
+        $this->top = new Top($plugin);
+        $this->unban = new Unban($plugin);
+        $this->unlock = new Unlock($plugin);
+        $this->void = new VoidClass($plugin);
   }
   public function onIslandCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
     if ($sender->hasPermission("skyblock.is")) {
