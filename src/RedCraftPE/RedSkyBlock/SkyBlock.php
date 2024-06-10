@@ -170,85 +170,90 @@ class SkyBlock extends PluginBase implements Listener {
     }
 	
 	public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) {
-		$form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
-			$result = $data;
-			if ($result === null) {
-				return;
-			}
-			switch ($result) {
-				case 0:
-				$plugin->getServer()->getCommandMap()->dispatch($player, "is ncdcreate");
-				break;
-				case 1:
-				$plugin->NCDWarpForm($player, "", $plugin);
-				break;
-				case 2:
-				$plugin->NCDSettingsForm($player);
-				break;
-				case 3:
-				$plugin->NCDInfoForm($player, "");
-				break;
-				case 4:
-				$plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtop");
-				break;
-			}
-		});
-		$form->setTitle("§l§e༺ §cSkyBlock §e༻");
-		$form->setContent($text."§l§c↣ §eXếp hạng đảo của bạn: §f" . $this->getValue($player));
-		$form->addButton("§l§e• §cVào đảo §e•");
-		$form->addButton("§l§e• §cĐến đảo người khác §e•");
-		$form->addButton("§l§e• §cQuản lí đảo §e•");
-		$form->addButton("§l§e• §cTra cứu đảo §e•");
-		$form->addButton("§l§e• §cXếp hạng đảo §e•");
-		$form->sendToPlayer($player);
-		return $form;
-	}
-
-	
-	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin) {
-        $form = new CustomForm(function(Player $player, $data) use ($plugin) {
-            if ($data === null) {
+        $form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
+            $result = $data;
+            if ($result === null) {
                 return;
             }
-            $playerName = $data[1];
-            if (!empty($playerName)) {
-                $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $playerName);
-            } else {
-                $plugin->NCDMenuForm($player, "§l§c↣ §cBạn chưa nhập tên người chơi.\n", $plugin);
+            switch ($result) {
+                case 0:
+                    $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdcreate");
+                    break;
+                case 1:
+                    $plugin->NCDWarpForm($player, "", $plugin);
+                    break;
+                case 2:
+                    $plugin->NCDSettingsForm($player, "", $plugin);
+                    break;
+                case 3:
+                    $plugin->NCDInfoForm($player, "", $plugin);
+                    break;
+                case 4:
+                    $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtop");
+                    break;
             }
+        });
+        $form->setTitle("§l§e༺ §cSkyBlock §e༻");
+        $form->setContent($text . "§l§c↣ §eXếp hạng đảo của bạn: §f" . $plugin->getValue($player));
+        $form->addButton("§l§e• §cVào đảo §e•");
+        $form->addButton("§l§e• §cĐến đảo người khác §e•");
+        $form->addButton("§l§e• §cQuản lí đảo §e•");
+        $form->addButton("§l§e• §cTra cứu đảo §e•");
+        $form->addButton("§l§e• §cXếp hạng đảo §e•");
+        $form->sendToPlayer($player);
+        return $form;
+    }
+
+	
+	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin)
+    {
+        $form = new CustomForm(function (Player $player, $data) use ($plugin) {
+            $result = $data;
+            if ($result === null) {
+                $plugin->NCDMenuForm($player, "", $plugin); 
+                return false;
+            }
+            if (empty($data[1])) {
+                $plugin->NCDMenuForm($player, "§l§c↣ §cBạn chưa nhập tên người chơi.\n", $plugin); 
+                return true;
+            }
+            $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]);
+            return false;
         });
         $form->setTitle("§l§e༺ §cĐến đảo người khác §e༻");
         $form->addLabel($text);
         $form->addInput("§l§c↣ §aNhập tên người chơi", "§fNhập tên người chơi vào đây");
         $player->sendForm($form);
+        return $form; // Trả về $form
     }
 
+
 	
-	 public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin) {
-   
-		$list = [];
-		foreach ($this->getServer()->getOnlinePlayers() as $p) {
-			$list[] = $p->getName();
-		}
-		$this->playerList[$player->getName()] = $list;
-		$form = new CustomForm(function(Player $player, $data) {
-			$result = $data;
-			if ($result === null) {
-				$this->NCDMenuForm($player, "");
-				return false;
-			}
-			$index = $data[1];
-			$playerName = $this->playerList[$player->getName()][$index];
-			if ($playerName instanceof Player) {
-			}
-			$this->getServer()->getCommandMap()->dispatch($player, "is ncdinfo " . $playerName);
-			return false;
-		});
-		$form->setTitle("§l§e༺ §cTra cứu đảo §e༻");
-		$form->addLabel($text);
-		$form->addDropdown("§l§c↣ §aChọn người chơi muốn tra cứu", $this->playerList[$player->getName()]);
-		$form->sendToPlayer($player);
-	}
+	public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin)
+    {
+        $list = [];
+        foreach ($this->getServer()->getOnlinePlayers() as $p) {
+            $list[] = $p->getName();
+        }
+        $this->playerList[$player->getName()] = $list;
+        $form = new CustomForm(function(Player $player, $data) use ($plugin) { // Sử dụng use ($plugin)
+            $result = $data;
+            if ($result === null) {
+                $plugin->NCDMenuForm($player, "", $plugin); // Truyền vào $plugin
+                return false;
+            }
+            $index = $data[1];
+            $playerName = $this->playerList[$player->getName()][$index];
+            if ($playerName instanceof Player) {
+            }
+            $this->getServer()->getCommandMap()->dispatch($player, "is ncdinfo " . $playerName);
+            return false;
+        });
+        $form->setTitle("§l§e༺ §cTra cứu đảo §e༻");
+        $form->addLabel($text);
+        $form->addDropdown("§l§c↣ §aChọn người chơi muốn tra cứu", $this->playerList[$player->getName()]);
+        $form->sendToPlayer($player);
+    }
 	
 	# Settings Form By Nguyễn Công Danh (NCD)
 	public function NCDSettingsForm(Player $player) {
@@ -410,7 +415,7 @@ class SkyBlock extends PluginBase implements Listener {
 		$form->sendToPlayer($player);
 	}
 	
-	public function NCDSettingSkyBlock(Player $player, string $text)
+	 public function NCDSettingSkyBlock(Player $player, string $text, SkyBlock $plugin) 
     {
         $form = new CustomForm(function (Player $player, $data) {
             $result = $data;
@@ -442,7 +447,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "off";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this);
+				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this); 
 				break;
 				case 1:
 				$name = strtolower($player->getName());
@@ -450,7 +455,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "on";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this); 
+				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this);
 				break;
 			}
 			return false;
