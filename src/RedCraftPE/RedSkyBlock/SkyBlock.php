@@ -204,16 +204,17 @@ class SkyBlock extends PluginBase implements Listener {
 		return $form;
 	}
 	
-	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin) 
+	 public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) 
     {
-        $form = new CustomForm(function(Player $player, $data) use ($plugin) { 
+        $form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
+        
             $result = $data;
             if ($result === null) {
-                $plugin->NCDMenuForm($player, "", $plugin); 
+                $plugin->NCDWarpForm($player, "", $plugin);
                 return false;
             }
             if (empty($data[1])) {
-                $plugin->NCDMenuForm($player, "", $plugin); 
+                 $plugin->NCDWarpForm($player, "", $plugin);
                 return true;
             }
             $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]); 
