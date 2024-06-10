@@ -37,7 +37,7 @@ class Ban {
         }
 
         if (array_key_exists($senderName, $skyblockArray)) {
-            if (in_array($player->getName(), $skyblockArray[$senderName]["Banned"] ?? [])) {
+           if (in_array($player->getName(), $skyblockArray[$senderName]["Banned"] ?? [])) {
                 $this->plugin->NCDBanUnBanForm($sender, "§l§c↣ §f{$player->getName()}" . " §cđã bị cấm khỏi đảo của bạn.\n\n");
                 return true;
             } 
