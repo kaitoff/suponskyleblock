@@ -428,8 +428,7 @@ public function onInvClose(InventoryCloseEvent $event) {
       }
     }
 }
-  public function onInventoryTransaction(InventoryTransactionEvent $event) {
-
+ public function onInventoryTransaction(InventoryTransactionEvent $event) {
     $transaction = $event->getTransaction();
     $inventories = $transaction->getInventories();
     $player = $transaction->getSource();
@@ -450,9 +449,9 @@ public function onInvClose(InventoryCloseEvent $event) {
       }
     }
 
-   foreach ($inventories as $inventory) {
-    if (in_array($inventory, $this->fakeInvs) && isset($item)) { 
-        $event->cancel();
+  foreach ($inventories as $inventory) {
+        if (in_array($inventory, $this->fakeInvs) && isset($item)) {
+            $event->cancel();
       if ($item->getId() === VanillaItems::COBBLESTONE()->getId()) { 
 
             if ($skyblockArray[$name]["Settings"]["Build"] === "on") {
@@ -468,7 +467,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage(TextFormat::GREEN . "Build protection has been enabled on your island.");
             }
-            $inventory->close($player);
+           $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
 } else if ($item->getId() === VanillaItems::DIAMOND_PICKAXE()->getId()) { 
 
             if ($skyblockArray[$name]["Settings"]["Break"] === "on") {
@@ -484,7 +484,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aBreak protection has been enabled on your island.");
             }
-            $inventory->close($player);
+            $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getId() === VanillaItems::GUNPOWDER()->getId()) {
 
             if ($skyblockArray[$name]["Settings"]["Pickup"] === "on") {
@@ -500,7 +501,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aPickup protection has been enabled on your island.");
             }
-            $inventory->close($player);
+            $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getId() === VanillaItems::ANVIL()->getId()) {
 
             if ($skyblockArray[$name]["Settings"]["Anvil"] === "on") {
@@ -516,7 +518,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aAnvil protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::CHEST)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Chest"] === "on") {
@@ -532,7 +535,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aChest protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::CRAFTING_TABLE)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["CraftingTable"] === "on") {
@@ -548,7 +552,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aOther players can now use crafting tables on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::ELYTRA)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Fly"] === "on") {
@@ -564,7 +569,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aOther players can now fly on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::HOPPER)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Hopper"] === "on") {
@@ -580,7 +586,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aHopper protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::BREWING_STAND_BLOCK)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Brewing"] === "on") {
@@ -596,7 +603,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aOther players can now brew potions on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::BEACON)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Beacon"] === "on") {
@@ -612,7 +620,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aBeacon protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::BUCKET)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Buckets"] === "on") {
@@ -628,7 +637,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aOther players can now use buckets on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::DIAMOND_SWORD)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["PVP"] === "on") {
@@ -644,7 +654,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aPVP protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::FLINT_STEEL)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["FlintAndSteel"] === "on") {
@@ -660,7 +671,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aOther players can now use flint and steel on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::FURNACE)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["Furnace"] === "on") {
@@ -676,7 +688,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aFurnace protection has been enabled on your island.");
             }
-            $inventory->close($player);
+             $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           } else if ($item->getID() === Item::get(Item::ENDER_CHEST)->getID()) {
 
             if ($skyblockArray[$name]["Settings"]["EnderChest"] === "on") {
@@ -692,7 +705,8 @@ public function onInvClose(InventoryCloseEvent $event) {
               $plugin->skyblock->save();
               $player->sendMessage("§l§cSkyBlock §e↣ §aEnder chest protection has been enabled on your island.");
             }
-            $inventory->close($player);
+            $inventory->close($player); 
+            $this->plugin->NCDMenuForm($player, "", $this->plugin);
           }
         }
       }
