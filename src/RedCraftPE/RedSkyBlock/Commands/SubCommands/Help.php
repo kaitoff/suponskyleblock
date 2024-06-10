@@ -19,11 +19,7 @@ class Help
     {
         if ($sender->hasPermission("skyblock.help")) {
             if (count($args) < 2) {
-                if ($sender instanceof Player) { // Kiểm tra xem người gửi lệnh có phải là người chơi không
                     $this->plugin->NCDMenuForm($sender, "", $this->plugin);
-                } else {
-                    $sender->sendMessage($this->plugin->NCDPrefix . "Lệnh này chỉ có thể được sử dụng bởi người chơi.");
-                }
                 return true;
             } else {
                 if (is_numeric($args[1])) {
