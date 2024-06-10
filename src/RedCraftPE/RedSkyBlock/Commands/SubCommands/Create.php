@@ -1,26 +1,28 @@
 <?php
+
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
-use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
-use pocketmine\math\Vector3;
 use pocketmine\item\VanillaItems;
-use pocketmine\world\Position;
 use pocketmine\player\GameMode;
-
+use pocketmine\player\Player;
+use pocketmine\world\Position;
+use pocketmine\math\Vector3;
 use RedCraftPE\RedSkyBlock\SkyBlock;
 use RedCraftPE\RedSkyBlock\Tasks\Generate;
 
-class Create {
+class Create
+{
 
     protected $plugin;
 
-    public function __construct(Skyblock $plugin){
+    public function __construct(Skyblock $plugin)
+    {
         $this->plugin = $plugin;
     }
 
-    public function onCreateCommand(CommandSender $sender): bool {
+    public function onCreateCommand(CommandSender $sender): bool
+    {
         if ($sender->hasPermission("skyblock.create")) {
             $interval = $this->plugin->cfg->get("Interval");
             $itemsArray = $this->plugin->cfg->get("Starting Items", []);
@@ -30,44 +32,45 @@ class Create {
             $initialSize = $this->plugin->cfg->get("Island Size");
             $senderName = strtolower($sender->getName());
 
-            if ($levelName === "") {
-                $sender->sendMessage($this->plugin->NCDPrefix."§cBạn phải thiết lập thế giới SkyBlock để plugin này hoạt động bình thường.");
+            // Kiểm tra xem người gửi lệnh có phải là người chơi không
+            if (!$sender instanceof Player) {
+                $sender->sendMessage($this->plugin->NCDPrefix . "§cLệnh này chỉ có thể được sử dụng bởi người chơi.");
                 return true;
             }
-            
+
+            // Kiểm tra xem thế giới đã được tải chưa
             $level = $this->plugin->getServer()->getWorldManager()->getWorldByName($levelName);
-            if ($level === null) {
-                if (!$this->plugin->getServer()->getWorldManager()->loadWorld($levelName)) {
-                    $sender->sendMessage($this->plugin->NCDPrefix."§cThế giới hiện được đặt là thế giới SkyBlock không tồn tại.");
-                    return true;
-                }
-                $level = $this->plugin->getServer()->getWorldManager()->getWorldByName($levelName);
+            if (!$level) {
+                $sender->sendMessage($this->plugin->NCDPrefix . "§cThế giới SkyBlock chưa được tải. Vui lòng thử lại sau.");
+                return true;
             }
 
             if (array_key_exists($senderName, $skyblockArray)) {
                 $this->plugin->getServer()->getCommandMap()->dispatch($sender, "is ncdgo");
                 return true;
             }
-            
-            if ($this->plugin->skyblock->get("Custom")) {
-                $position = Position::fromObject(new Vector3($islands * $interval + $this->plugin->skyblock->get("CustomX"), 15 + $this->plugin->skyblock->get("CustomY"), $islands * $interval + $this->plugin->skyblock->get("CustomZ")), $level);
-                $sender->teleport($position);
-            } else {
-                $position = Position::fromObject(new Vector3($islands * $interval + 2, 15 + 3, $islands * $interval + 4), $level);
-                $sender->teleport($position);
-            }
 
+            // Tính toán vị trí đảo mới
+            $islandX = $islands * $interval + ($this->plugin->skyblock->get("CustomX") ?? 0);
+            $islandZ = $islands * $interval + ($this->plugin->skyblock->get("CustomZ") ?? 0);
+            $islandY = 15 + ($this->plugin->skyblock->get("CustomY") ?? 3); // Đặt giá trị mặc định cho CustomY là 3
+
+            // Dịch chuyển người chơi đến đảo mới và chuyển sang chế độ Spectator
+            $sender->teleport(new Position($islandX, $islandY, $islandZ, $level));
             $sender->setGamemode(GameMode::SPECTATOR());
+
+            // Lên lịch tạo đảo sau một khoảng thời gian ngắn
             $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
 
-            foreach($itemsArray as $items) {
-                if (count($itemsArray) > 0) {
+            // Thêm vật phẩm vào inventory
+            foreach ($itemsArray as $items) {
+                if (!empty($itemsArray)) {
                     $itemArray = explode(" ", $items);
                     if (count($itemArray) === 3) {
                         $id = intval($itemArray[0]);
-                        $damage = intval($itemArray[1]);
+                        $meta = intval($itemArray[1]);
                         $count = intval($itemArray[2]);
-                        $sender->getInventory()->addItem(VanillaItems::get($id, $damage, $count)); 
+                        $sender->getInventory()->addItem(VanillaItems::get($id, $meta, $count));
                     }
                 }
             }
@@ -108,8 +111,8 @@ class Create {
 
             $sender->sendMessage($this->plugin->NCDPrefix."§aBạn đã tạo đảo thành công. Đồ đã vào túi đồ của bạn.");
             return true;
-        } else {
-            $sender->sendMessage($this->plugin->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+         } else {
+            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
             return true;
         }
     }
