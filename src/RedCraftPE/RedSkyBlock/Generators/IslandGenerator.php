@@ -2,8 +2,9 @@
 
 namespace RedCraftPE\RedSkyBlock\Generators;
 
-use pocketmine\block\Block;
-use pocketmine\block\BlockFactory;
+use pocketmine\world\World;
+use pocketmine\block\{Block, BlockFactory, BlockLegacyIds as BlockIds};
+
 use pocketmine\math\Vector3;
 use pocketmine\utils\Random;
 use pocketmine\level\generator\object\Tree;
