@@ -8,7 +8,7 @@ use pocketmine\event\block\BlockUpdateEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\inventory\InventoryCloseEvent;
-use pocketmine\event\inventory\InventoryPickupItemEvent;
+use pocketmine\event\entity\EntityItemPickupEvent;
 use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBucketEvent;
@@ -366,57 +366,39 @@ $startX = $start->x;
       }
     }
   }
-  public function onPickup(InventoryPickupItemEvent $event) {
+ public function onEntityItemPickup(EntityItemPickupEvent $event) 
+    {
+        $entity = $event->getItem()->getOwningEntity(); 
+        $entityX = $entity->getLocation()->getX();
+        $entityY = $entity->getLocation()->getY();
+        $entityZ = $entity->getLocation()->getZ();
+        $plugin = $this->plugin;
+        $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
+        $islandOwner = "";
 
-    $viewers = $event->getViewers();
-    $entity;
-    foreach($viewers as $key => $viewer) {
+        if ($entity instanceof Player) {
+            if ($entity->getWorld()->getFolderName() === $plugin->cfg->get("SkyBlockWorld")) {
+                foreach (array_keys($skyblockArray) as $skyblocks) {
+                    $start = Position::fromObject($skyblockArray[$skyblocks]["Area"]["start"], $this->level);
+                    $end = Position::fromObject($skyblockArray[$skyblocks]["Area"]["end"], $this->level);
 
-      $entity = $viewer;
-    }
-    $entityX = $entity->getX();
-    $entityY = $entity->getY();
-    $entityZ = $entity->getZ();
-    $plugin = $this->plugin;
-    $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
-    $islandOwner = "";
-
-    if ($entity instanceof Player) {
-
-      if ($entity->getLevel()->getFolderName() === $plugin->cfg->get("SkyBlockWorld")) {
-
-        foreach (array_keys($skyblockArray) as $skyblocks) {
-
-          $start = Position::fromObject($skyblockArray[$skyblocks]["Area"]["start"], $this->level);
-$startX = $start->x;
-          $startY = $skyblockArray[$skyblocks]["Area"]["start"]["Y"];
-          $startZ = $skyblockArray[$skyblocks]["Area"]["start"]["Z"];
-          $endX = $skyblockArray[$skyblocks]["Area"]["end"]["X"];
-          $endY = $skyblockArray[$skyblocks]["Area"]["end"]["Y"];
-          $endZ = $skyblockArray[$skyblocks]["Area"]["end"]["Z"];
-
-          if ($entityX > $startX && $entityY > $startY && $entityZ > $startZ && $entityX < $endX && $entityY < $endY && $entityZ < $endZ) {
-
-            $islandOwner = $skyblocks;
-            break;
-          }
+                    if ($entityX > $start->x && $entityY > $start->y && $entityZ > $start->z && $entityX < $end->x && $entityY < $end->y && $entityZ < $end->z) {
+                        $islandOwner = $skyblocks;
+                        break;
+                    }
+                }
+                if ($islandOwner === "") {
+                    return;
+                } else if (in_array($entity->getName(), $skyblockArray[$islandOwner]["Members"])) {
+                    return;
+                } else {
+                    if ($skyblockArray[$islandOwner]["Settings"]["Pickup"] === "on") {
+                        $event->cancel();
+                    }
+                }
+            }
         }
-        if ($islandOwner === "") {
-
-          return;
-        } else if (in_array($entity->getName(), $skyblockArray[$islandOwner]["Members"])) {
-
-          return;
-        } else {
-
-          if ($skyblockArray[$islandOwner]["Settings"]["Pickup"] === "on") {
-
-            $event->setCancelled(true);
-          }
-        }
-      }
     }
-  }
 public function onInvClose(InventoryCloseEvent $event) {
 
     $inventory = $event->getInventory();
