@@ -22,9 +22,9 @@ use RedCraftPE\RedSkyBlock\Tasks\Generate;
 use RedCraftPE\RedSkyBlock\Blocks\Lava;
 use jojoe77777\FormAPI\{SimpleForm, CustomForm}; // Sửa FormAPI
 
+ public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
 class SkyBlock extends PluginBase implements Listener {
-	
-	 public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
+
   private $eventListener;
   private $island;
   public $playerList = [];
