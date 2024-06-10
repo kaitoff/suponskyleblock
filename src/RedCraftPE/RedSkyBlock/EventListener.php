@@ -2,145 +2,165 @@
 
 namespace RedCraftPE\RedSkyBlock;
 
-use pocketmine\event\block\{BlockBreakEvent, BlockPlaceEvent, BlockUpdateEvent};
-use pocketmine\event\player\{PlayerBucketEvent, PlayerInteractEvent, PlayerMoveEvent, PlayerDeathEvent, PlayerJoinEvent, PlayerQuitEvent};
-use pocketmine\event\entity\{EntityDamageByEntityEvent, EntityTeleportEvent};
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\block\BlockUpdateEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityTeleportEvent;
+use pocketmine\event\inventory\InventoryCloseEvent;
+use pocketmine\event\inventory\InventoryPickupItemEvent;
+use pocketmine\event\inventory\InventoryTransactionEvent;
 use pocketmine\event\Listener;
-use pocketmine\event\inventory\{InventoryPickupItemEvent, InventoryCloseEvent, InventoryTransactionEvent};
-
+use pocketmine\event\player\PlayerBucketEvent;
+use pocketmine\event\player\PlayerDeathEvent;
+use pocketmine\event\player\PlayerInteractEvent;
+use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\event\player\PlayerMoveEvent;
+use pocketmine\event\player\PlayerQuitEvent;
+use pocketmine\inventory\Inventory;
+use pocketmine\inventory\transaction\action\SlotChangeAction;
+use pocketmine\item\Item;
+use pocketmine\item\VanillaItems;
+use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
+use pocketmine\player\GameMode;
 use pocketmine\player\Player;
-use pocketmine\world\Position;
-use pocketmine\block\{VanillaBlocks, Block};
-use pocketmine\item\{VanillaItems, Item};
-use pocketmine\inventory\{Inventory, transaction\action\SlotChangeAction};
 use pocketmine\utils\TextFormat;
+use pocketmine\block\VanillaBlocks;
+use pocketmine\block\BlockLegacyIds as BlockIds;
+use pocketmine\block\Block;
+use pocketmine\world\Position;
 
 use RedCraftPE\RedSkyBlock\SkyBlock;
 use RedCraftPE\RedSkyBlock\Commands\SubCommands\Settings;
 
-class EventListener implements Listener {
- private $plugin;
-  private $level;
-  private static $listener;
-  public $fakeBlocks = [];
-  public $fakeInvs = [];
-  public $playerList = [];
-  public function __construct($plugin, $level) { 
+class EventListener implements Listener
+{
+    private $plugin;
+    private $level;
+    private static $listener;
+    public $fakeBlocks = [];
+    public $fakeInvs = [];
+    public $playerList = [];
 
-    self::$listener = $this;
-    $this->plugin = $plugin;
-    $this->level = $level;
-  }
-  public static function getListener(): self {
-
-    return self::$listener;
-  }
-  public function addFakeBlock(Block $block): bool {
-
-    array_push($this->fakeBlocks, $block);
-    return true;
-  }
-  public function addFakeInv(Inventory $inv): bool {
-
-    array_push($this->fakeInvs, $inv);
-    return true;
-  }
-  public function onPlace(BlockPlaceEvent $event) {
-    $player = $event->getPlayer();
-    $block = $event->getBlock();
-    $level = $this->level;
-    $plugin = $this->plugin;
-    $valuableBlocks = $plugin->cfg->get("Valuable Blocks", []);
-
-    if ($player->getWorld() === $level) { 
-      $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
-      $blockX = $block->getPosition()->getX(); 
-      $blockY = $block->getPosition()->getY(); 
-      $blockZ = $block->getPosition()->getZ();
-      $islandOwner = "";
-
-      foreach (array_keys($skyblockArray) as $skyblocks) {
-        $start = Position::fromObject($skyblockArray[$skyblocks]["Area"]["start"], $this->level);
-        $end = Position::fromObject($skyblockArray[$skyblocks]["Area"]["end"], $this->level);
-
-        if ($blockX >= $start->getX() && $blockY >= $start->getY() && $blockZ >= $start->getZ() && 
-            $blockX <= $end->getX() && $blockY <= $end->getY() && $blockZ <= $end->getZ()) {
-
-          $islandOwner = $skyblocks;
-          break;
-        }
-      }
-      if ($islandOwner === "") {
-        if ($player->hasPermission("skyblock.bypass")) {
-          return;
-        }
-        $event->cancel(); // Sửa thành cancel()
-        $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot build here!");
-        return;
-      } else if (in_array($player->getName(), $skyblockArray[$islandOwner]["Members"])) {
-        if (array_key_exists($block->getId(), $valuableBlocks)) { // Sửa thành getId()
-          $skyblockArray[$islandOwner]["Value"] += $valuableBlocks[$block->getId()];
-          $plugin->skyblock->set("SkyBlock", $skyblockArray);
-          $plugin->skyblock->save();
-        }
-        return;
-      } else {
-        if ($player->hasPermission("skyblock.bypass") || $skyblockArray[$islandOwner]["Settings"]["Build"] === "off") {
-          return;
-        }
-        $event->cancel();
-        $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot build here!");
-        return;
-      }
+    public function __construct($plugin, $level)
+    {
+        self::$listener = $this;
+        $this->plugin = $plugin;
+        $this->level = $level;
     }
-  }
-  public function onBreak(BlockBreakEvent $event) {
 
+    public static function getListener(): self
+    {
+        return self::$listener;
+    }
+
+    public function addFakeBlock(Block $block): bool
+    {
+        array_push($this->fakeBlocks, $block);
+        return true;
+    }
+
+    public function addFakeInv(Inventory $inv): bool
+    {
+        array_push($this->fakeInvs, $inv);
+        return true;
+    }
+
+    public function onPlace(BlockPlaceEvent $event)
+    {
+        $player = $event->getPlayer();
+        $block = $event->getBlock();
+        $level = $this->level;
+        $plugin = $this->plugin;
+        $valuableBlocks = $plugin->cfg->get("Valuable Blocks", []);
+
+        if ($player->getWorld() === $level) {
+            $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
+            $blockX = $block->getPosition()->getX();
+            $blockY = $block->getPosition()->getY();
+            $blockZ = $block->getPosition()->getZ();
+            $islandOwner = "";
+
+            foreach (array_keys($skyblockArray) as $skyblocks) {
+                $start = Position::fromObject($skyblockArray[$skyblocks]["Area"]["start"], $this->level);
+                $startX = $start->getX();
+                $startY = $skyblockArray[$skyblocks]["Area"]["start"]["Y"];
+                $startZ = $skyblockArray[$skyblocks]["Area"]["start"]["Z"];
+                $endX = $skyblockArray[$skyblocks]["Area"]["end"]["X"];
+                $endY = $skyblockArray[$skyblocks]["Area"]["end"]["Y"];
+                $endZ = $skyblockArray[$skyblocks]["Area"]["end"]["Z"];
+
+                if ($blockX >= $startX && $blockY >= $startY && $blockZ >= $startZ && $blockX <= $endX && $blockY <= $endY && $blockZ <= $endZ) {
+                    $islandOwner = $skyblocks;
+                    break;
+                }
+            }
+            if ($islandOwner === "") {
+                if ($player->hasPermission("skyblock.bypass")) {
+                    return;
+                }
+                $event->cancel(); // Sửa thành cancel()
+                $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot build here!");
+                return;
+            } else if (in_array($player->getName(), $skyblockArray[$islandOwner]["Members"])) {
+                if (array_key_exists($block->getId(), $valuableBlocks)) { // Sửa thành getId()
+                    $skyblockArray[$islandOwner]["Value"] += $valuableBlocks[$block->getId()];
+                    $plugin->skyblock->set("SkyBlock", $skyblockArray);
+                    $plugin->skyblock->save();
+                }
+                return;
+            } else {
+                if ($player->hasPermission("skyblock.bypass") || $skyblockArray[$islandOwner]["Settings"]["Build"] === "off") {
+                    return;
+                }
+                $event->cancel(); // Sửa thành cancel()
+                $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot build here!");
+                return;
+            }
+        }
+    }
+  public function onBreak(BlockBreakEvent $event) {
     $player = $event->getPlayer();
     $block = $event->getBlock();
     $level = $this->level;
     $plugin = $this->plugin;
     $valuableBlocks = $plugin->cfg->get("Valuable Blocks", []);
 
-    if ($player->getWorld() === $level) {
-
+    if ($player->getWorld() === $level) { // Sử dụng getWorld()
       $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
-      $blockX = $block->getX();
-      $blockY = $block->getY();
-      $blockZ = $block->getZ();
+      $blockX = $block->getPosition()->getX(); // Sử dụng getPosition()
+      $blockY = $block->getPosition()->getY(); // Sử dụng getPosition()
+      $blockZ = $block->getPosition()->getZ(); // Sử dụng getPosition()
       $islandOwner = "";
 
       foreach (array_keys($skyblockArray) as $skyblocks) {
-
         $start = Position::fromObject($skyblockArray[$skyblocks]["Area"]["start"], $this->level);
-$startX = $start->x;
+        $startX = $start->getX();
         $startY = $skyblockArray[$skyblocks]["Area"]["start"]["Y"];
         $startZ = $skyblockArray[$skyblocks]["Area"]["start"]["Z"];
         $endX = $skyblockArray[$skyblocks]["Area"]["end"]["X"];
         $endY = $skyblockArray[$skyblocks]["Area"]["end"]["Y"];
         $endZ = $skyblockArray[$skyblocks]["Area"]["end"]["Z"];
 
-        if ($blockX > $startX && $blockY > $startY && $blockZ > $startZ && $blockX < $endX && $blockY < $endY && $blockZ < $endZ) {
-
+        if ($blockX >= $startX && $blockY >= $startY && $blockZ >= $startZ && $blockX < $endX && $blockY < $endY && $blockZ < $endZ) {
           $islandOwner = $skyblocks;
           break;
         }
       }
       if ($islandOwner === "") {
-
         if ($player->hasPermission("skyblock.bypass")) {
-
           return;
         }
 
-        $event->setCancelled(true);
+        $event->cancel(); // Sửa thành cancel()
         $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot break blocks here!");
         return;
       } elseif (in_array($player->getName(), $skyblockArray[$islandOwner]["Members"])) {
 
-        if (array_key_exists($block->getID(), $valuableBlocks)) {
+        if (array_key_exists($block->getId(), $valuableBlocks)) { // Sửa thành getId()
 
-          $skyblockArray[$islandOwner]["Value"] -= $valuableBlocks[$block->getID()];
+          $skyblockArray[$islandOwner]["Value"] -= $valuableBlocks[$block->getId()];
           $plugin->skyblock->set("SkyBlock", $skyblockArray);
           $plugin->skyblock->save();
         }
@@ -152,25 +172,26 @@ $startX = $start->x;
           return;
         }
 
-        $event->setCancelled(true);
+        $event->cancel(); // Sửa thành cancel()
         $player->sendMessage("§l§cSkyBlock §e↣ §c You cannot break blocks here!");
         return;
       }
     }
   }
   public function onInteract(PlayerInteractEvent $event) {
-
     $player = $event->getPlayer();
     $block = $event->getBlock();
     $item = $event->getItem();
     $level = $this->level;
 
     if ($player->hasPermission("skyblock.bypass")) {
-
       return;
     }
 
-    if ($block->getID() === 54 || $block->getID() === 61 || $block->getID() === 62 || $block->getID() === 138 || $block->getID() === 130 || $item->getID() === 259 || $block->getID() === 145 || $block->getID() === 58 || $block->getID() === 154 || $block->getID() === 117) {
+    $blockId = $block->getId(); // Sử dụng getId()
+    $itemId = $item->getId(); // Sử dụng getId()
+
+    if ($blockId === 54 || $blockId === 61 || $blockId === 62 || $block->getID() === 138 || $block->getID() === 130 || $item->getID() === 259 || $block->getID() === 145 || $block->getID() === 58 || $block->getID() === 154 || $block->getID() === 117) {
 
       if ($player->getWorld() === $level) {
 
