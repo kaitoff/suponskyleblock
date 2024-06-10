@@ -24,38 +24,39 @@ use jojoe77777\FormAPI\{SimpleForm, CustomForm}; // Sửa FormAPI
 
 
 class SkyBlock extends PluginBase implements Listener {
-    
-    public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
-    private $eventListener;
-    private $island;
-    public $playerList = [];
-    
-  	public function __construct(){
-		self::$instance = $this;
+
+	public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
+	private $eventListener;
+	private $island;
+
+	// Khai báo biến $playerList vào bên trong class
+	public $playerList = [];
+
+	public function onEnable(): void {
+		$this->pointapi = $this->getServer()->getPluginManager()->getPlugin("PointAPI");
+		if (empty($this->cfg->get("SkyBlockWorld"))) {
+			$this->getLogger()->info("§l§cSkyBlock §e↣ §aĐể plugin này hoạt động bình thường, bạn phải đặt thế giới SkyBlock trong máy chủ của mình. (In order for this plugin to function properly, you must set a SkyBlock world in your server).");
+			$this->level = null;
+		} else {
+			$this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
+			if (!$this->getServer()->getWorldManager()->isWorldLoaded($this->cfg->get("SkyBlockWorld"))) {
+				if ($this->getServer()->getWorldManager()->loadWorld($this->cfg->get("SkyBlockWorld"))) {
+					$this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
+					$this->getLogger()->info("§l§cSkyBlock §e↣ §a SkyBlock is running on the world {$this->level->getFolderName()}");
+				} else {
+					$this->getLogger()->info("§l§cSkyBlock §e↣ §c The level currently set as the SkyBlock world does not exist.");
+					$this->level = null;
+				}
+			} else {
+				$this->getLogger()->info(TextFormat::GREEN . "SkyBlock is running on level {$this->level->getFolderName()}");
+			}
+		}
+
+		$this->eventListener = new EventListener($this, $this->level);
+		$this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
+
+		$this->island = new Island($this);
 	}
-  public function onEnable(): void {
-    $this->pointapi = $this->getServer()->getPluginManager()->getPlugin("PointAPI");
-    if (empty($this->cfg->get("SkyBlockWorld"))) {
-      $this->getLogger()->info("§l§cSkyBlock §e↣ §aĐể plugin này hoạt động bình thường, bạn phải đặt thế giới SkyBlock trong máy chủ của mình. (In order for this plugin to function properly, you must set a SkyBlock world in your server).");
-      $this->level = null;
-    } else {
-      $this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
-      if (!$this->getServer()->getWorldManager()->isWorldLoaded($this->cfg->get("SkyBlockWorld"))) {
-        if ($this->getServer()->getWorldManager()->loadWorld($this->cfg->get("SkyBlockWorld"))) {
-          $this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
-          $this->getLogger()->info("§l§cSkyBlock §e↣ §a SkyBlock is running on the world {$this->level->getFolderName()}");
-        } else {
-          $this->getLogger()->info("§l§cSkyBlock §e↣ §c The level currently set as the SkyBlock world does not exist.");
-          $this->level = null;
-        }
-      } else {
-        $this->getLogger()->info(TextFormat::GREEN . "SkyBlock is running on level {$this->level->getFolderName()}");
-      }
-    }
-    $this->eventListener = new EventListener($this, $this->level);
-    $this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
-    $this->island = new Island($this);
-  }
  public function onLoad(): void {
     if (!is_dir($this->getDataFolder())) {
       @mkdir($this->getDataFolder());
