@@ -22,24 +22,19 @@ class Settings {
     protected $plugin;
   
     public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
+    $this->plugin = $plugin;
+  }
+
+ public function onSettingsCommand(CommandSender $sender): bool {
+    if ($sender->hasPermission("skyblock.island.settings")) {
+        $this->plugin->createSettingsInventory($sender, $this->plugin);
+        $sender->sendMessage($this->plugin->NCDPrefix . "§aIsland Settings Menu Opened.");
+        return true;
+    } else {
+        $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
+        return true;
     }
-  public function onSettingsCommand(CommandSender $sender): bool {
-        if ($sender->hasPermission("skyblock.island.settings")) {
-            $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
-            if (array_key_exists(strtolower($sender->getName()), $skyblockArray)) {
-                $this->createSettingsInventory($sender);
-                $sender->sendMessage($this->plugin->NCDPrefix . "§aIsland Settings Menu Opened.");
-                return true;
-            } else {
-                $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have an island yet.");
-                return true;
-            }
-        } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-            return true;
-        }
-    }
+  }
   public function createSettingsInventory(Player $player) {
         $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
         $name = strtolower($player->getName());
