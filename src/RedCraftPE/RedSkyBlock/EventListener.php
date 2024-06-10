@@ -448,9 +448,8 @@ public function onInvClose(InventoryCloseEvent $event) {
     }
 
    foreach ($inventories as $inventory) {
-    if (in_array($inventory, $this->fakeInvs) && isset($item)) {
+    if (in_array($inventory, $this->fakeInvs) && isset($item)) { 
         $event->cancel();
-
       if ($item->getId() === VanillaItems::COBBLESTONE()->getId()) { 
 
             if ($skyblockArray[$name]["Settings"]["Build"] === "on") {
