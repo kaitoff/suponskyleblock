@@ -47,13 +47,13 @@ class Add {
               return true;
             } else {
 
-              if (in_array($player->getName(), $skyblockArray[$senderName]["Members"])) {
+              if (count($skyblockArray[$senderName]["Members"] ?? []) === $limit) {
 
                 SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §f" . $player->getName() . " §cđã là thành viên đảo của bạn.\n\n");
                 return true;
               } else {
 
-                if (!in_array($player->getName(), $skyblockArray[$senderName]["Banned"])) {
+               if (!in_array($player->getName(), $skyblockArray[$senderName]["Banned"] ?? [])) {
 
                   $skyblockArray[$senderName]["Members"][] = $player->getName();
                   SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
