@@ -56,7 +56,7 @@ if (array_key_exists($senderName, $skyblockArray)) {
 
           $sender->teleport(new Position($islands * $interval + 2, 15 + 3, $islands * $interval + 4, $level));
         }
-        $sender->setGamemode(GameMode::SPECTATOR());
+        $sender->$sender->setSectatorMode(); 
 
             $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
 
