@@ -156,10 +156,16 @@ class Island
                     case "ncdteleport":
                     case "ncdvisit":
                         return $this->teleport->onTeleportCommand($sender, $args);
-                    case "ncdlb":
-                    case "ncdleaderboard":
-                    case "ncdtop":
-                        return $this->top->onTopCommand($sender);
+case "ncdlb":
+case "ncdleaderboard":
+case "ncdtop":
+    return $this->top->showTopForm($sender, "§l§c↣ §aTop 5 Island SkyBlock\n\n" .
+        "§l§c↣ §cTOP 1: §f{$first} §cđạt được: §e{$firstValue} §cđiểm\n\n" .
+        "§l§c↣ §cTOP 2: §f{$second} §cđạt được: §e{$secondValue} §cđiểm\n\n" .
+        "§l§c↣ §cTOP 3: §f{$third} §cđạt được: §e{$thirdValue} §cđiểm\n\n" .
+        "§l§c↣ §cTOP 4: §f{$fourth} §cđạt được: §e{$fourthValue} §cđiểm\n\n" .
+        "§l§c↣ §cTOP 5: §f{$fifth} §cđạt được: §e{$fifthValue} §cđiểm\n\n"); // Sửa thành showTopForm
+
                     case "ncdunban":
                     case "ncdpardon":
                         return $this->unban->onUnbanCommand($sender, $args);
