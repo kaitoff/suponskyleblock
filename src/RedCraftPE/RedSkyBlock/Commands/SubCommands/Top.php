@@ -2,11 +2,11 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
-use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
 use pocketmine\player\Player;
+use pocketmine\utils\TextFormat;
 use RedCraftPE\RedSkyBlock\SkyBlock;
-use jojoe77777\FormAPI\SimpleForm; 
+use jojoe77777\FormAPI\SimpleForm;
 
 class Top
 {
@@ -22,49 +22,22 @@ class Top
         if ($sender->hasPermission("skyblock.top")) {
             $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
 
-            $first = "N/A";
-            $second = "N/A";
-            $third = "N/A";
-            $fourth = "N/A";
-            $fifth = "N/A";
-
+            // Sử dụng usort để sắp xếp mảng theo giá trị giảm dần
             usort($skyblockArray, function ($a, $b) {
                 return $b['Value'] <=> $a['Value'];
             });
 
-$topIslands = array_slice($skyblockArray, 0, 5);
-            
+            // Lấy 5 hòn đảo đầu tiên
+            $topIslands = array_slice($skyblockArray, 0, 5);
+
+            $topInfoMessage = "§l§c↣ §aTop 5 Island SkyBlock\n\n";
+
             foreach ($topIslands as $index => $island) {
-                if ($index === 0) {
-                    $first = $island["Members"][0] ?? 'N/A';
-                    $firstValue = $island["Value"];
-                }
-                if ($index === 1) {
-                    $second = $island["Members"][0] ?? 'N/A';
-                    $secondValue = $island["Value"];
-                }
-                if ($index === 2) {
-                    $third = $island["Members"][0] ?? 'N/A';
-                    $thirdValue = $island["Value"];
-                }
-                if ($index === 3) {
-                    $fourth = $island["Members"][0] ?? 'N/A';
-                    $fourthValue = $island["Value"];
-                }
-                if ($index === 4) {
-                    $fifth = $island["Members"][0] ?? 'N/A';
-                    $fifthValue = $island["Value"];
-                }
+                $topInfoMessage .= "§l§c↣ §cTOP " . ($index + 1) . ": §f" . ($island["Members"][0] ?? 'N/A') . " §cđạt được: §e" . ($island["Value"] ?? 0) . " §cđiểm\n\n";
             }
-      $topInfoMessage = "§l§c↣ §aTop 5 Island SkyBlock\n\n" .
-                "§l§c↣ §cTOP 1: §f{$first} §cđạt được: §e{$firstValue} §cđiểm\n\n" .
-                "§l§c↣ §cTOP 2: §f{$second} §cđạt được: §e{$secondValue} §cđiểm\n\n" .
-                "§l§c↣ §cTOP 3: §f{$third} §cđạt được: §e{$thirdValue} §cđiểm\n\n" .
-                "§l§c↣ §cTOP 4: §f{$fourth} §cđạt được: §e{$fourthValue} §cđiểm\n\n" .
-                "§l§c↣ §cTOP 5: §f{$fifth} §cđạt được: §e{$fifthValue} §cđiểm\n\n";
-            
+
             if ($sender instanceof Player) {
-                $this->plugin->NCDTopForm($sender, $topInfoMessage);
+                $this->plugin->NCDTopForm($sender, $topInfoMessage, $this->plugin); // Truyền vào $this->plugin
             } else {
                 $sender->sendMessage($topInfoMessage);
             }
@@ -75,19 +48,17 @@ $topIslands = array_slice($skyblockArray, 0, 5);
             return true;
         }
     }
-	
-	# CODE FORM BY NGUYỄN CÔNG DANH (NCD)
-public function NCDTopForm(Player $sender, string $text)
+
+    // CODE FORM BY NGUYỄN CÔNG DANH (NCD)
+    public function NCDTopForm(Player $sender, string $text, SkyBlock $plugin) // Thêm tham số SkyBlock $plugin
     {
-        $form = new SimpleForm(function (Player $sender, ?int $data = null) {
-            $result = $data;
-            if ($result === null) {
-                $this->plugin->NCDMenuForm($sender, "");
+        $form = new SimpleForm(function (Player $sender, ?int $data = null) use ($plugin) { // Sử dụng use ($plugin)
+            if ($data === null) {
                 return;
             }
-            switch ($result) {
+            switch ($data) {
                 case 0:
-                    $this->plugin->NCDMenuForm($sender, "");
+                    $plugin->NCDMenuForm($sender, "", $plugin); // Truyền vào $plugin
                     break;
             }
         });
@@ -97,4 +68,4 @@ public function NCDTopForm(Player $sender, string $text)
         $form->sendToPlayer($sender);
         return $form;
     }
-	
+}
