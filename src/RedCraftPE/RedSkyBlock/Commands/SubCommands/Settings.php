@@ -61,7 +61,7 @@ class Settings {
             ->setInt(Tile::TAG_Z, $blockPos->z)
             ->setListTag(Tile::TAG_ITEMS, []);
 
-        $inv = new FakeInventory($tile);
+        $inv = new FakeInventory();
         EventListener::getListener()->addFakeInv($inv);
         
 $items = [
