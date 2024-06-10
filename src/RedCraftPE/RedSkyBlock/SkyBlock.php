@@ -2,61 +2,51 @@
 
 namespace RedCraftPE\RedSkyBlock;
 
-use pocketmine\block\VanillaBlocks;
-use pocketmine\item\VanillaItems;
-use pocketmine\network\mcpe\protocol\types\CacheableNbt;
-use pocketmine\nbt\tag\CompoundTag;
-use pocketmine\network\mcpe\protocol\UpdateBlockPacket;
+use pocketmine\plugin\PluginBase;
+use pocketmine\utils\{Config, TextFormat};
 use pocketmine\world\Position;
-use pocketmine\utils\Config;
-use pocketmine\utils\TextFormat;
-use pocketmine\block\tile\Tile;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\event\Listener;
+use pocketmine\world\World;  
 use pocketmine\player\Player;
-use pocketmine\plugin\PluginBase;
+use pocketmine\event\Listener;
+use pocketmine\block\BlockManager;
 
 use RedCraftPE\RedSkyBlock\Commands\Island;
 use RedCraftPE\RedSkyBlock\Tasks\Generate;
 use RedCraftPE\RedSkyBlock\Blocks\Lava;
-use jojoe77777\FormAPI\{SimpleForm, CustomForm}; // Sửa FormAPI
-
+use jojoe77777\FormAPI\{SimpleForm, CustomForm, ModalForm};
 
 class SkyBlock extends PluginBase implements Listener {
+	
+	 public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
+  private $eventListener;
+  private $island;
+  public $playerList = [];
 
-	public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
-	private $eventListener;
-	private $island;
-
-	// Khai báo biến $playerList vào bên trong class
-	public $playerList = [];
-
-	public function onEnable(): void {
-		$this->pointapi = $this->getServer()->getPluginManager()->getPlugin("PointAPI");
-		if (empty($this->cfg->get("SkyBlockWorld"))) {
-			$this->getLogger()->info("§l§cSkyBlock §e↣ §aĐể plugin này hoạt động bình thường, bạn phải đặt thế giới SkyBlock trong máy chủ của mình. (In order for this plugin to function properly, you must set a SkyBlock world in your server).");
-			$this->level = null;
-		} else {
-			$this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
-			if (!$this->getServer()->getWorldManager()->isWorldLoaded($this->cfg->get("SkyBlockWorld"))) {
-				if ($this->getServer()->getWorldManager()->loadWorld($this->cfg->get("SkyBlockWorld"))) {
-					$this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
-					$this->getLogger()->info("§l§cSkyBlock §e↣ §a SkyBlock is running on the world {$this->level->getFolderName()}");
-				} else {
-					$this->getLogger()->info("§l§cSkyBlock §e↣ §c The level currently set as the SkyBlock world does not exist.");
-					$this->level = null;
-				}
-			} else {
-				$this->getLogger()->info(TextFormat::GREEN . "SkyBlock is running on level {$this->level->getFolderName()}");
-			}
-		}
-
-		$this->eventListener = new EventListener($this, $this->level);
-		$this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
-
-		$this->island = new Island($this);
-	}
+  public function onEnable(): void {
+    $this->pointapi = $this->getServer()->getPluginManager()->getPlugin("PointAPI");
+    if (empty($this->cfg->get("SkyBlockWorld"))) {
+      $this->getLogger()->info("§l§cSkyBlock §e↣ §aĐể plugin này hoạt động bình thường, bạn phải đặt thế giới SkyBlock trong máy chủ của mình. (In order for this plugin to function properly, you must set a SkyBlock world in your server).");
+      $this->level = null;
+    } else {
+      $this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
+      if (!$this->getServer()->getWorldManager()->isWorldLoaded($this->cfg->get("SkyBlockWorld"))) {
+        if ($this->getServer()->getWorldManager()->loadWorld($this->cfg->get("SkyBlockWorld"))) {
+          $this->level = $this->getServer()->getWorldManager()->getWorldByName($this->cfg->get("SkyBlockWorld"));
+          $this->getLogger()->info("§l§cSkyBlock §e↣ §a SkyBlock is running on the world {$this->level->getFolderName()}");
+        } else {
+          $this->getLogger()->info("§l§cSkyBlock §e↣ §c The level currently set as the SkyBlock world does not exist.");
+          $this->level = null;
+        }
+      } else {
+        $this->getLogger()->info(TextFormat::GREEN . "SkyBlock is running on level {$this->level->getFolderName()}");
+      }
+    }
+    $this->eventListener = new EventListener($this, $this->level);
+    $this->getServer()->getPluginManager()->registerEvents($this->eventListener, $this);
+    $this->island = new Island($this);
+  }
  public function onLoad(): void {
     if (!is_dir($this->getDataFolder())) {
       @mkdir($this->getDataFolder());
@@ -133,6 +123,18 @@ class SkyBlock extends PluginBase implements Listener {
 
   return strval($skyblockArray[$name]["Value"]);
  }
+ public function getBanned(Player $player): string {
+
+  $skyblockArray = $this->skyblock->get("SkyBlock", []);
+  $name = strtolower($player->getName());
+
+  if (!array_key_exists($name, $skyblockArray)) {
+
+   return "N/A";
+  }
+
+  return implode(", ", $skyblockArray[$name]["Banned"]);
+ }
  public function getLockedStatus(Player $player): string {
 
   $skyblockArray = $this->skyblock->get("SkyBlock", []);
@@ -167,8 +169,8 @@ class SkyBlock extends PluginBase implements Listener {
     return "{$length} x {$width}";
   }
 	
-	public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) { // thêm vào biến $plugin
-		$form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
+	 public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) {
+    $form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
 			$result = $data;
 			if ($result === null) {
 				return;
@@ -178,13 +180,13 @@ class SkyBlock extends PluginBase implements Listener {
 				$this->getServer()->getCommandMap()->dispatch($player, "is ncdcreate");
 				break;
 				case 1:
-				$plugin->NCDWarpForm($player, "", $plugin); // Thêm $plugin
+				$this->NCDWarpForm($player, "");
 				break;
 				case 2:
-				$plugin->NCDSettingsForm($player, "", $plugin); // Thêm $plugin
+				$this->NCDSettingsForm($player);
 				break;
 				case 3:
-				$plugin->NCDInfoForm($player, "", $plugin); // Thêm $plugin
+				$this->NCDInfoForm($player, "");
 				break;
 				case 4:
 				$this->getServer()->getCommandMap()->dispatch($player, "is ncdtop");
@@ -194,64 +196,62 @@ class SkyBlock extends PluginBase implements Listener {
 		$form->setTitle("§l§e༺ §cSkyBlock §e༻");
 		$form->setContent($text."§l§c↣ §eXếp hạng đảo của bạn: §f" . $this->getValue($player));
 		$form->addButton("§l§e• §cVào đảo §e•");
-        $form->addButton("§l§e• §cĐến đảo người khác §e•");
-        $form->addButton("§l§e• §cQuản lí đảo §e•");
-        $form->addButton("§l§e• §cTra cứu đảo §e•");
-        $form->addButton("§l§e• §cXếp hạng đảo §e•");
-        $form->sendToPlayer($player);
-        return $form;
-    }
-
+		$form->addButton("§l§e• §cĐến đảo người khác §e•");
+		$form->addButton("§l§e• §cQuản lí đảo §e•");
+		$form->addButton("§l§e• §cTra cứu đảo §e•");
+		$form->addButton("§l§e• §cXếp hạng đảo §e•");
+		$form->sendToPlayer($player);
+		return $form;
+	}
 	
-	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin)
-    {
-        $form = new CustomForm(function (Player $player, $data) use ($plugin) {
-            $result = $data;
-            if ($result === null) {
-                $plugin->NCDMenuForm($player, "", $plugin); 
-                return false;
-            }
-            if (empty($data[1])) {
-                $plugin->NCDMenuForm($player, "§l§c↣ §cBạn chưa nhập tên người chơi.\n", $plugin); 
-                return true;
-            }
-            $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]);
-            return false;
-        });
-        $form->setTitle("§l§e༺ §cĐến đảo người khác §e༻");
-        $form->addLabel($text);
-        $form->addInput("§l§c↣ §aNhập tên người chơi", "§fNhập tên người chơi vào đây");
-        $player->sendForm($form);
-        return $form; // Trả về $form
-    }
-
-
+	 public function NCDMenuForm(Player $player, string $text, SkyBlock $plugin) 
+  {
+    $form = new SimpleForm(function (Player $player, $data = null) use ($plugin) {
+     
+      $result = $data;
+      if ($result === null) {
+        $plugin->NCDWarpForm($player, "", $plugin);
+        return false;
+      }
+      if (empty($data[1])) {
+         $plugin->NCDWarpForm($player, "", $plugin);
+        return true;
+      }
+      $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]); 
+      return false;
+    });
+    $form->setTitle("§l§e༺ §cĐến đảo người khác §e༻");
+    $form->addLabel($text);
+    $form->addInput("§l§c↣ §aNhập tên người chơi", "§fNhập tên người chơi vào đây");
+    $form->sendToPlayer($player);
+    return $form; // Trả về $form
+  }
 	
-	public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin)
-    {
-        $list = [];
-        foreach ($this->getServer()->getOnlinePlayers() as $p) {
-            $list[] = $p->getName();
-        }
-        $this->playerList[$player->getName()] = $list;
-        $form = new CustomForm(function(Player $player, $data) use ($plugin) { // Sử dụng use ($plugin)
-            $result = $data;
-            if ($result === null) {
-                $plugin->NCDMenuForm($player, "", $plugin); // Truyền vào $plugin
-                return false;
-            }
-            $index = $data[1];
-            $playerName = $this->playerList[$player->getName()][$index];
-            if ($playerName instanceof Player) {
-            }
-            $this->getServer()->getCommandMap()->dispatch($player, "is ncdinfo " . $playerName);
-            return false;
-        });
-        $form->setTitle("§l§e༺ §cTra cứu đảo §e༻");
-        $form->addLabel($text);
-        $form->addDropdown("§l§c↣ §aChọn người chơi muốn tra cứu", $this->playerList[$player->getName()]);
-        $form->sendToPlayer($player);
-    }
+	 public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin) {
+  
+		$list = [];
+		foreach ($this->getServer()->getOnlinePlayers() as $p) {
+			$list[] = $p->getName();
+		}
+		$this->playerList[$player->getName()] = $list;
+		$form = new CustomForm(function(Player $player, $data) {
+			$result = $data;
+			if ($result === null) {
+				$this->NCDMenuForm($player, "");
+				return false;
+			}
+			$index = $data[1];
+			$playerName = $this->playerList[$player->getName()][$index];
+			if ($playerName instanceof Player) {
+			}
+			$this->getServer()->getCommandMap()->dispatch($player, "is ncdinfo " . $playerName);
+			return false;
+		});
+		$form->setTitle("§l§e༺ §cTra cứu đảo §e༻");
+		$form->addLabel($text);
+		$form->addDropdown("§l§c↣ §aChọn người chơi muốn tra cứu", $this->playerList[$player->getName()]);
+		$form->sendToPlayer($player);
+	}
 	
 	# Settings Form By Nguyễn Công Danh (NCD)
 	public function NCDSettingsForm(Player $player) {
@@ -413,14 +413,14 @@ class SkyBlock extends PluginBase implements Listener {
 		$form->sendToPlayer($player);
 	}
 	
-	 public function NCDSettingSkyBlock(Player $player, string $text, SkyBlock $plugin) 
-    {
-        $form = new CustomForm(function (Player $player, $data) {
-            $result = $data;
-            if ($result === null) {
-                $this->NCDSettingsForm($player, "", $this);
-                return false;
-            }
+	public function NCDSettingSkyBlock(Player $player, string $text)
+  {
+    $form = new CustomForm(function (Player $player, $data) {
+      $result = $data;
+      if ($result === null) {
+        $this->NCDSettingsForm($player, "", $this);
+        return false;
+      }
 			switch ($data[1]) {
 				case 0:
 				$name = strtolower($player->getName());
@@ -435,7 +435,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["PVP"] = "on";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				
+ 
 				break;
 			}
 			switch ($data[2]) {
@@ -445,7 +445,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "off";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this); 
+				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this);
 				break;
 				case 1:
 				$name = strtolower($player->getName());
@@ -453,7 +453,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "on";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this);
+				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this); 
 				break;
 			}
 			return false;
