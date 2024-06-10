@@ -715,7 +715,7 @@ public function onInvClose(InventoryCloseEvent $event) {
         }
       }
     }
-  }
+  
    public function onJoin(PlayerJoinEvent $ev){
 		$player = $ev->getPlayer();
 		$this->plugin->NCDMenuForm($player, "", $this->plugin);
