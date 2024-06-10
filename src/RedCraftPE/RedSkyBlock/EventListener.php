@@ -9,6 +9,7 @@ use pocketmine\event\Listener;
 use pocketmine\event\inventory\{InventoryPickupItemEvent, InventoryCloseEvent, InventoryTransactionEvent};
 
 use pocketmine\player\Player;
+use pocketmine\world\World;
 use pocketmine\world\Position;
 use pocketmine\block\{VanillaBlocks, Block};
 use pocketmine\item\{VanillaItems, Item};
