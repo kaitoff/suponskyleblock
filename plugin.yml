@@ -1,0 +1,96 @@
+name: RedSkyBlock
+author: RedCraftPE
+editor: KIRIN MAYER
+version: 5.0.0
+api: 5.0.0
+main: RedCraftPE\RedSkyBlock\SkyBlock
+commands:
+  island:
+    description: Mở Menu SkyBlock.
+    aliases:
+      - is
+      - sb
+    usage: /is
+    permission: skyblock.is
+permissions:
+  skyblock.is:
+    description: Cho phép người chơi sử dụng lệnh /is (mở menu SkyBlock).
+    default: true
+  skyblock.create:
+    description: Cho phép người chơi tạo một hòn đảo SkyBlock mới.
+    default: true
+  skyblock.tp:
+    description: Cho phép người chơi dịch chuyển đến đảo của người chơi khác.
+    default: true
+  skyblock.members:
+    description: Cho phép người chơi quản lý thành viên trên đảo của họ.
+    default: true
+  skyblock.bypass:
+    description: Cho phép người chơi bỏ qua các giới hạn bảo vệ của đảo.
+    default: op
+  skyblock.kick:
+    description: Cho phép người chơi kick người chơi khác ra khỏi đảo của họ.
+    default: true
+  skyblock.lock:
+    description: Cho phép người chơi quản lý trạng thái khóa của đảo.
+    default: true
+  skyblock.setworld:
+    description: Cho phép người chơi thiết lập thế giới SkyBlock của máy chủ.
+    default: op
+  skyblock.help:
+    description: Cho phép người chơi sử dụng lệnh trợ giúp của SkyBlock.
+    default: true
+  skyblock.void:
+    description: Cho phép người chơi quản lý cài đặt khoảng không (void) trong thế giới SkyBlock.
+    default: op
+  skyblock.reset:
+    description: Cho phép người chơi đặt lại đảo của họ.
+    default: true
+  skyblock.reload:
+    description: Cho phép người chơi tải lại dữ liệu của SkyBlock.
+    default: op
+  skyblock.name:
+    description: Cho phép người chơi thay đổi hoặc xem tên của đảo của họ.
+    default: true
+  skyblock.info:
+    description: Cho phép người chơi xem thông tin về đảo của người chơi khác.
+    default: true
+  skyblock.createworld:
+    description: Cho phép người chơi tạo và thiết lập một thế giới SkyBlock mới cho máy chủ.
+    default: op
+  skyblock.ban:
+    description: Cho phép người chơi cấm/bỏ cấm người chơi khác khỏi đảo của họ.
+    default: true
+  skyblock.pos:
+    description: Cho phép người chơi thay đổi vị trí của đảo tùy chỉnh.
+    default: op
+  skyblock.set:
+    description: Cho phép người chơi thiết lập dữ liệu cho đảo tùy chỉnh.
+    default: op
+  skyblock.custom:
+    description: Cho phép người chơi bật/tắt chế độ đảo tùy chỉnh.
+    default: op
+  skyblock.delete:
+    description: Cho phép người chơi xóa đảo của người dùng khác.
+    default: op
+  skyblock.makespawn:
+    description: Cho phép người chơi đặt vị trí hồi sinh tùy chỉnh cho đảo.
+    default: op
+  skyblock.setspawn:
+    description: Cho phép người chơi đặt vị trí hồi sinh cho đảo của họ.
+    default: true
+  skyblock.size:
+    description: Cho phép người chơi thay đổi kích thước của đảo.
+    default: op
+  skyblock.rank:
+    description: Cho phép người chơi xem xếp hạng của đảo.
+    default: true
+  skyblock.top:
+    description: Cho phép người chơi xem top các đảo trên máy chủ.
+    default: true
+  skyblock.fly:
+    description: Cho phép người chơi bay trong thế giới SkyBlock.
+    default: false
+  skyblock.island.settings:
+    description: Cho phép người chơi thay đổi cài đặt của đảo.
+    default: true
