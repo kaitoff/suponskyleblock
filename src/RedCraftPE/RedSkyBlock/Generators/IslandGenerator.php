@@ -28,7 +28,7 @@ class IslandGenerator {
                         $blockType = ($y < 17) ? BlockLegacyIds::STONE : BlockLegacyIds::GRASS; 
                         $level->getWorld()->setBlock(new Vector3($x, $y, $z), BlockFactory::getInstance()->get($blockType)); 
                         if ($x === ($islands * $interval) + 1 && $z === $islands * $interval && $y === 17) {
-                            $worldGenerator = new WorldGenerator(SkyBlock::getInstance());
+                            $worldGenerator = new WorldGenerator($plugin);
                             $worldGenerator->generateTreeAt($level, new Vector3($x, $y + 1, $z));
                         }
                     }
