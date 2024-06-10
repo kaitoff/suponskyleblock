@@ -411,14 +411,14 @@ class SkyBlock extends PluginBase implements Listener {
 		$form->sendToPlayer($player);
 	}
 	
-	public function NCDSettingSkyBlock($player, string $text)
-	{
-		$form = new CustomForm(function(Player $player, $data) {
-			$result = $data;
-			if ($result === null) {
-				$this->NCDSettingsForm($player);
-				return false;
-			}
+	public function NCDSettingSkyBlock(Player $player, string $text)
+    {
+        $form = new CustomForm(function (Player $player, $data) {
+            $result = $data;
+            if ($result === null) {
+                $this->NCDSettingsForm($player, "", $this);
+                return false;
+            }
 			switch ($data[1]) {
 				case 0:
 				$name = strtolower($player->getName());
@@ -443,7 +443,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "off";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n");
+				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this);
 				break;
 				case 1:
 				$name = strtolower($player->getName());
@@ -451,7 +451,7 @@ class SkyBlock extends PluginBase implements Listener {
 				$skyblockArray[$name]["Settings"]["Pickup"] = "on";
 				$this->skyblock->set("SkyBlock", $skyblockArray);
 				$this->skyblock->save();
-				$this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n");
+				 $this->NCDSettingSkyBlock($player, "§l§c↣ §aCài đặt đảo của bạn đã được cập nhật!\n", $this); 
 				break;
 			}
 			return false;
