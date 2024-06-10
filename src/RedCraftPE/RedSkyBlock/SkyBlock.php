@@ -22,13 +22,17 @@ use RedCraftPE\RedSkyBlock\Tasks\Generate;
 use RedCraftPE\RedSkyBlock\Blocks\Lava;
 use jojoe77777\FormAPI\{SimpleForm, CustomForm}; // Sửa FormAPI
 
- public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
+
 class SkyBlock extends PluginBase implements Listener {
-
-  private $eventListener;
-  private $island;
-  public $playerList = [];
-
+    
+    public $NCDPrefix = "§l§6【§eSkyblock§6】 ";
+    private $eventListener;
+    private $island;
+    public $playerList = [];
+    
+  	public function __construct(){
+		self::$instance = $this;
+	}
   public function onEnable(): void {
     $this->pointapi = $this->getServer()->getPluginManager()->getPlugin("PointAPI");
     if (empty($this->cfg->get("SkyBlockWorld"))) {
