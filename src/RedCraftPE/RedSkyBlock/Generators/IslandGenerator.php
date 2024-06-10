@@ -42,10 +42,10 @@ class IslandGenerator {
 
             if ($y < 17) {
 
-              $level->setBlock(new Vector3($x, $y, $z), BlockFactory::get(Block::STONE));
+             $level->setBlock(new Vector3($x, $y, $z), BlockFactory::getInstance()->get(Block::STONE));
             } else {
 
-              $level->setBlock(new Vector3($x, $y, $z), BlockFactory::get(Block::GRASS));
+            $level->setBlock(new Vector3($x, $y, $z), BlockFactory::getInstance()->get(Block::GRASS));
             }
           }
         }
