@@ -413,10 +413,10 @@ public function onInvClose(InventoryCloseEvent $event) {
 
         $index = array_search($inv, $this->fakeInvs);
         unset($this->fakeInvs[$index]);
-        foreach($inventory->getViewers() as $viewer) {
-
-          $viewer->sendMessage("§l§cSkyBlock §e↣ §c Island Settings Menu Closed.");
-        }
+        foreach ($inventory->getViewers() as $viewer) {
+    $viewer->sendMessage("§l§cSkyBlock §e↣ §c Island Settings Menu Closed.");
+    $this->plugin->NCDMenuForm($viewer, "", $this->plugin);
+}
       }
     }
     foreach($this->fakeBlocks as $block) {
