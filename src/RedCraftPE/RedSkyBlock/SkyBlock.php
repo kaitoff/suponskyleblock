@@ -204,26 +204,27 @@ class SkyBlock extends PluginBase implements Listener {
 		return $form;
 	}
 	
-	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin) {
-        $form = new CustomForm(function(Player $player, $data) use ($plugin) {
-      
-			$result = $data;
-			if ($result === null) {
-				$this->NCDMenuForm($player, "");
-				return false;
-			}
-			if (empty($data[1])) {
-				$this->NCDMenuForm($player, "");
-				return true;
-			}
-			$this->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]);
-			return false;
-		});
-		$form->setTitle("§l§e༺ §cĐến đảo người khác §e༻");
-		$form->addLabel($text);
-		$form->addInput("§l§c↣ §aNhập tên người chơi", "§fNhập tên người chơi vào đây");
-		$form->sendToPlayer($player);
-	}
+	public function NCDWarpForm(Player $player, string $text, SkyBlock $plugin) 
+    {
+        $form = new CustomForm(function(Player $player, $data) use ($plugin) { 
+            $result = $data;
+            if ($result === null) {
+                $plugin->NCDMenuForm($player, "", $plugin); 
+                return false;
+            }
+            if (empty($data[1])) {
+                $plugin->NCDMenuForm($player, "", $plugin); 
+                return true;
+            }
+            $plugin->getServer()->getCommandMap()->dispatch($player, "is ncdtp " . $data[1]); 
+            return false;
+        });
+        $form->setTitle("§l§e༺ §cĐến đảo người khác §e༻");
+        $form->addLabel($text);
+        $form->addInput("§l§c↣ §aNhập tên người chơi", "§fNhập tên người chơi vào đây");
+        $form->sendToPlayer($player);
+        return $form; // Trả về $form
+    }
 	
 	 public function NCDInfoForm(Player $player, string $text, SkyBlock $plugin) {
    
