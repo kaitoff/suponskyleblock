@@ -16,12 +16,12 @@ class Add {
     }
     public function onAddCommand(CommandSender $sender, array $args): bool {
         if (!$sender->hasPermission("skyblock.members")) {
-            $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+            $sender->sendMessage($this->plugin->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
             return true;
         }
 
         if (count($args) < 2) {
-            $sender->sendMessage($this->NCDPrefix."§cUsage: /is add <player>");
+            $sender->sendMessage($this->plugin->NCDPrefix."§cUsage: /is add <player>");
             return true;
         }
 
@@ -39,19 +39,19 @@ class Add {
 
           if (array_key_exists($senderName, $skyblockArray)) {
 
-            if (count($skyblockArray[$senderName]["Members"]) === $limit) {
+            if (count($skyblockArray[$senderName]["Members"] ?? []) === $limit) {
 
               $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §cĐảo của bạn đã đạt đến số lượng thành viên tối đa.\n\n");
               return true;
             } else {
 
-              if (in_array($player->getName(), $skyblockArray[$senderName]["Members"])) {
+              if (in_array($player->getName(), $skyblockArray[$senderName]["Members"] ?? [])) {
 
                 $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §f" . $player->getName() . " §cđã là thành viên đảo của bạn.\n\n");
                 return true;
               } else {
 
-                if (!in_array($player->getName(), $skyblockArray[$senderName]["Banned"])) {
+                if (!in_array($player->getName(), $skyblockArray[$senderName]["Banned"] ?? [])) {
 
                   $skyblockArray[$senderName]["Members"][] = $player->getName();
                   $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
@@ -72,6 +72,5 @@ class Add {
             return true;
           }
         }
-      }
-      return true; 
-} 
+    } 
+}
