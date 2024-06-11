@@ -4,57 +4,71 @@ namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
 use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
-class Unban
-{
-    protected $plugin;
+class Unban {
 
-    public function __construct(SkyBlock $plugin)
-    {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onUnbanCommand(CommandSender $sender, array $args): bool
-    {
-        if (!$sender->hasPermission("skyblock.ban")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
-            return true;
-        }
+  public function __construct() {
 
-        if (count($args) < 2) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cUsage: /is unban <player>");
-            return true;
-        }
+    self::$instance = $this;
+  }
+
+  public function onUnbanCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
+
+    if ($sender->hasPermission("skyblock.ban")) {
+
+      if (count($args) < 2) {
+
+        $sender->sendMessage($this->NCDPrefix."§cUsage: /is unban <player>");
+        return true;
+      } else {
 
         $senderName = strtolower($sender->getName());
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
-        $playerName = implode(" ", array_slice($args, 1));
+        $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+        $player = SkyBlock::getInstance()->getServer()->getPlayerExact(implode(" ", array_slice($args, 1)));
 
-        // Tìm người chơi theo tên hoặc một phần tên
-        $player = $this->plugin->getServer()->getPlayerByPrefix($playerName);
+        if (!$player) {
 
-        if (!$player || !$player instanceof Player || !array_key_exists($senderName, $skyblockArray)) {
-            $this->plugin->NCDBanUnBanForm($sender, "§l§c↣ §f" . $playerName . " §ckhông tồn tại hoặc không online.\n\n");
-            return true;
-        }
-
-        if ($player->getName() === $sender->getName()) {
-            $this->plugin->NCDBanUnBanForm($sender, "§l§c↣ §cBạn không bị cấm khỏi đảo mình.\n\n");
-            return true;
-        }
-
-        if (in_array($player->getName(), $skyblockArray[$senderName]["Banned"] ?? [])) {
-            unset($skyblockArray[$senderName]["Banned"][array_search($player->getName(), $skyblockArray[$senderName]["Banned"])]);
-            $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-            $this->plugin->skyblock->save();
-            $this->plugin->NCDBanUnBanForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã được bỏ cấm vào đảo.\n\n");
-            $player->sendMessage($this->plugin->NCDPrefix . "§aNgười chơi §f" . $sender->getName() . " §ađã bỏ cấm bạn vào đảo của họ.");
+          SkyBlock::getInstance()->NCDBanUnBanForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông tồn tại hoặc không online.\n\n");
+          return true;
         } else {
-            $this->plugin->NCDBanUnBanForm($sender, "§l§c↣ §f{$player->getName()} §ckhông bị cấm vào đảo của bạn.\n\n");
-        }
 
-        return true;
+          if ($player->getName() === $sender->getName()) {
+
+            SkyBlock::getInstance()->NCDBanUnBanForm($sender, "§l§c↣ §cBạn không bị cấm của đảo mình.\n\n");
+            return true;
+          }
+          if (array_key_exists($senderName, $skyblockArray)) {
+
+            if (in_array($player->getName(), $skyblockArray[$senderName]["Banned"])) {
+
+              unset($skyblockArray[$senderName]["Banned"][array_search($player->getName(), $skyblockArray[$senderName]["Banned"])]);
+              SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+              SkyBlock::getInstance()->skyblock->save();
+              SkyBlock::getInstance()->NCDBanUnBanForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã được bỏ cấm vào đảo.\n\n");
+              $player->sendMessage($this->NCDPrefix."§aNgười chơi §f" . $sender->getName() . " §ađã bỏ cấm bạn vào đảo của họ.");
+              return true;
+            } else {
+
+              SkyBlock::getInstance()->NCDBanUnBanForm($sender, "§l§c↣ §f{$player->getName()} §ckhông bị cấm vào đảo của bạn.\n\n");
+              return true;
+            }
+          } else {
+
+            SkyBlock::getInstance()->NCDBanUnBanForm($sender, "§l§c↣ §cBạn chưa có đảo nào cả.\n\n");
+            return true;
+          }
+        }
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+      return true;
     }
+  }
 }

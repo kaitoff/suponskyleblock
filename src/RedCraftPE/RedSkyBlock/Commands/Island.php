@@ -2,15 +2,48 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands;
 
-use pocketmine\command\{Command, CommandSender};
-use RedCraftPE\RedSkyBlock\SkyBlock;
-use RedCraftPE\RedSkyBlock\Commands\SubCommands\{Add, Ban, Create, CreateWorld, Custom, Decrease, Delete, Fly, Help, Hunger, Increase, Info, Kick, Lock, MakeSpawn, Members, Name, Pos1, Pos2, Rank, Reload, Remove, Reset, Set, SetSpawn, Settings, SetWorld, Teleport, Top, Unban, Unlock, VoidClass};
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
+use pocketmine\utils\TextFormat;
 
-class Island
-{
+use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Add;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Ban;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Create;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\CreateWorld;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Custom;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Decrease;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Delete;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Fly;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Help;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Hunger;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Increase;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Info;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Kick;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Lock;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\MakeSpawn;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Members;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Name;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Pos1;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Pos2;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Rank;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Reload;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Remove;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Reset;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Set;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\SetSpawn;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Settings;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\SetWorld;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Teleport;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Top;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Unban;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\Unlock;
+use RedCraftPE\RedSkyBlock\Commands\SubCommands\VoidClass;
+
+class Island {
 
   private static $instance;
-  private $plugin;
+protected $plugin;
   private $add;
   private $ban;
   private $create;
@@ -43,11 +76,12 @@ class Island
   private $unban;
   private $unlock;
   private $void;
+public function __construct(SkyBlock $plugin) {
+        self::$instance = $this;
 
-  public function __construct(SkyBlock $plugin) {
-   $this->plugin = $plugin; 
+        $this->plugin = $plugin;
 
-       $this->add = new Add($plugin);
+        $this->add = new Add($plugin);
         $this->ban = new Ban($plugin);
         $this->create = new Create($plugin);
         $this->createWorld = new CreateWorld($plugin);
@@ -79,108 +113,170 @@ class Island
         $this->unban = new Unban($plugin);
         $this->unlock = new Unlock($plugin);
         $this->void = new VoidClass($plugin);
-  }
-  public function onIslandCommand(CommandSender $sender, Command $command, string $label, array $args): bool
-    {
-        if ($sender->hasPermission("skyblock.is")) {
-            if (empty($args)) {
-                    return $this->help->onHelpCommand($sender, $args);
-            } else {
-                switch (strtolower($args[0])) {
-                    case "ncdadd":
-                        return $this->add->onAddCommand($sender, $args);
-                    case "ncdban":
-                    case "ncdexpel":
-                        return $this->ban->onBanCommand($sender, $args);
-                    case "ncdcreate":
-                            return $this->create->onCreateCommand($sender);
-                    case "ncdcw":
-                    case "ncdcreateworld":
-                        return $this->createWorld->onCreateWorldCommand($sender, $args);
-                    case "ncdcustom":
-                        return $this->custom->onCustomCommand($sender, $args);
-                    case "ncddecrease":
-                        return $this->decrease->onDecreaseCommand($sender, $args);
-                    case "ncddelete":
-                        return $this->delete->onDeleteCommand($sender, $args);
-                    case "ncdfly":
-                        return $this->fly->onFlyCommand($sender);
-                    case "ncdhelp":
-                        return $this->help->onHelpCommand($sender, $args);
-                    case "ncdhunger":
-                        return $this->hunger->onHungerCommand($sender, $args);
-                    case "ncdincrease":
-                        return $this->increase->onIncreaseCommand($sender, $args);
-                    case "ncdinfo":
-                        return $this->info->onInfoCommand($sender, $args);
-                    case "ncdkick":
-                        return $this->kick->onKickCommand($sender, $args);
-                    case "ncdclose":
-                    case "ncdlock":
-                        return $this->lock->onLockCommand($sender);
-                    case "ncdmakespawn":
-                    case "ncdcreatespawn":
-                        return $this->makeSpawn->onMakeSpawnCommand($sender);
-                    case "ncdmembers":
-                        return $this->members->onMembersCommand($sender);
-                    case "ncdrename":
-                    case "ncdname":
-                        return $this->name->onNameCommand($sender, $args);
-                    case "ncdpos1":
-                        return $this->pos1->onPos1Command($sender);
-                    case "ncdpos2":
-                        return $this->pos2->onPos2Command($sender);
-                    case "ncdrank":
-                        return $this->rank->onRankCommand($sender);
-                    case "ncdload":
-                    case "ncdreload":
-                        return $this->reload->onReloadCommand($sender);
-                    case "ncdremove":
-                        return $this->remove->onRemoveCommand($sender, $args);
-                    case "ncdrestart":
-                    case "ncdreset":
-                        return $this->reset->onResetCommand($sender);
-                    case "ncdsw":
-                    case "ncdsetworld":
-                        return $this->setWorld->onSetWorldCommand($sender);
-                    case "ncdsettings":
-                        return $this->settings->onSettingsCommand($sender);
-                    case "ncdset":
-                        return $this->set->onSetCommand($sender);
-                    case "ncdsetspawn":
-                        return $this->setSpawn->onSetSpawnCommand($sender);
-                    case "ncdspawn":
-                    case "ncdgoto":
-                    case "ncdgo":
-                    case "ncdtp":
-                    case "ncdteleport":
-                    case "ncdvisit":
-                        return $this->teleport->onTeleportCommand($sender, $args);
-case "ncdlb":
-case "ncdleaderboard":
-case "ncdtop":
-    return $this->top->showTopForm($sender, "§l§c↣ §aTop 5 Island SkyBlock\n\n" .
-        "§l§c↣ §cTOP 1: §f{$first} §cđạt được: §e{$firstValue} §cđiểm\n\n" .
-        "§l§c↣ §cTOP 2: §f{$second} §cđạt được: §e{$secondValue} §cđiểm\n\n" .
-        "§l§c↣ §cTOP 3: §f{$third} §cđạt được: §e{$thirdValue} §cđiểm\n\n" .
-        "§l§c↣ §cTOP 4: §f{$fourth} §cđạt được: §e{$fourthValue} §cđiểm\n\n" .
-        "§l§c↣ §cTOP 5: §f{$fifth} §cđạt được: §e{$fifthValue} §cđiểm\n\n"); // Sửa thành showTopForm
-
-                    case "ncdunban":
-                    case "ncdpardon":
-                        return $this->unban->onUnbanCommand($sender, $args);
-                    case "ncdopen":
-                    case "ncdunlock":
-                        return $this->unlock->onUnlockCommand($sender);
-                    case "ncdvoid":
-                        return $this->void->onVoidCommand($sender, $args);
-                    default:
-                        return $this->help->onHelpCommand($sender, $args); 
-                }
-            }
-       } else {
-            $sender->sendMessage("§l§cSkyBlock §e↣ §cYou do not have the proper permissions to run this command.");
-        }
-        return true;
     }
+  public function onIslandCommand(CommandSender $sender, Command $command, string $label, array $args): bool {
+
+    if ($sender->hasPermission("skyblock.is")) {
+
+      if (!$args) {
+
+        return $this->help->onHelpCommand($sender, $args);
+      } else {
+
+        switch (strtolower($args[0])) {
+
+          case "ncdadd":
+
+            return $this->add->onAddCommand($sender, $args);
+          break;
+          case "ncdban":
+          case "ncdexpel":
+
+            return $this->ban->onBanCommand($sender, $args);
+          break;
+          case "ncdcreate":
+
+            return $this->create->onCreateCommand($sender);
+          break;
+          case "ncdcw":
+          case "ncdcreateworld":
+
+            return $this->createWorld->onCreateWorldCommand($sender, $args);
+          break;
+          case "ncdcustom":
+
+            return $this->custom->onCustomCommand($sender, $args);
+          break;
+          case "ncddecrease":
+
+            return $this->decrease->onDecreaseCommand($sender, $args);
+          break;
+          case "ncddelete":
+
+            return $this->delete->onDeleteCommand($sender, $args);
+          break;
+          case "ncdfly":
+
+            return $this->fly->onFlyCommand($sender);
+          break;
+          case "ncdhelp":
+
+            return $this->help->onHelpCommand($sender, $args);
+          break;
+          case "ncdhunger":
+
+            return $this->hunger->onHungerCommand($sender, $args);
+          break;
+          case "ncdincrease":
+
+            return $this->increase->onIncreaseCommand($sender, $args);
+          break;
+          case "ncdinfo":
+
+            return $this->info->onInfoCommand($sender, $args);
+          break;
+          case "ncdkick":
+
+            return $this->kick->onKickCommand($sender, $args);
+          break;
+          case "ncdclose":
+          case "ncdlock":
+
+            return $this->lock->onLockCommand($sender);
+          break;
+          case "ncdmakespawn":
+          case "ncdcreatespawn":
+
+            return $this->makeSpawn->onMakeSpawnCommand($sender);
+          break;
+          case "ncdmembers":
+
+            return $this->members->onMembersCommand($sender);
+          break;
+          case "ncdrename":
+          case "ncdname":
+
+            return $this->name->onNameCommand($sender, $args);
+          break;
+          case "ncdpos1":
+
+            return $this->pos1->onPos1Command($sender);
+          break;
+          case "ncdpos2":
+
+            return $this->pos2->onPos2Command($sender);
+          break;
+          case "ncdrank":
+
+            return $this->rank->onRankCommand($sender);
+          break;
+          case "ncdload":
+          case "ncdreload":
+
+            return $this->reload->onReloadCommand($sender);
+          break;
+          case "ncdremove":
+
+            return $this->remove->onRemoveCommand($sender, $args);
+          break;
+          case "ncdrestart":
+          case "ncdreset":
+
+            return $this->reset->onResetCommand($sender);
+          break;
+          case "ncdsw":
+          case "ncdsetworld":
+
+            return $this->setWorld->onSetWorldCommand($sender);
+          break;
+          case "ncdsettings":
+
+            return $this->settings->onSettingsCommand($sender);
+          break;
+          case "ncdset":
+
+            return $this->set->onSetCommand($sender);
+          break;
+          case "ncdsetspawn":
+
+            return $this->setSpawn->onSetSpawnCommand($sender);
+          break;
+          case "ncdspawn":
+          case "ncdgoto":
+          case "ncdgo":
+          case "ncdtp":
+          case "ncdteleport":
+          case "ncdvisit":
+
+            return $this->teleport->onTeleportCommand($sender, $args);
+          break;
+          case "ncdlb":
+          case "ncdleaderboard":
+          case "ncdtop":
+
+            return $this->top->onTopCommand($sender);
+          break;
+          case "ncdunban":
+          case "ncdpardon":
+
+            return $this->unban->onUnbanCommand($sender, $args);
+          break;
+          case "ncdopen":
+          case "ncdunlock":
+
+            return $this->unlock->onUnlockCommand($sender);
+          break;
+          case "ncdvoid":
+
+            return $this->void->onVoidCommand($sender, $args);
+          break;
+        }
+        return false;
+      }
+    } else {
+
+      $sender->sendMessage("§l§cSkyBlock §e↣ §cYou do not have the proper permissions to run this command.");
+      return true;
+    }
+  }
 }

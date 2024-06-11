@@ -3,25 +3,22 @@
 namespace RedCraftPE\RedSkyBlock\Generators;
 
 use pocketmine\Server;
-use pocketmine\world\generator\FlatGenerator;
-use pocketmine\world\generator\GeneratorManager;
+use pocketmine\level\generator\Flat;
+
 use RedCraftPE\RedSkyBlock\Commands\SubCommands\CreateWorld;
 
 class WorldGenerator {
 
-    private static $instance;
+  private static $instance;
 
-    public function __construct($plugin) {
-        $this->plugin = $plugin;
-        self::$instance = $this;
-    }
+  public function __construct($plugin) {
 
-    public function generateWorld(string $levelName) {
-        $plugin = $this->plugin;
-        $generator = GeneratorManager::getInstance()->fromGeneratorName(FlatGenerator::class);
-        $options = $generator->getOptions();
-        $options->preset = "3;minecraft:air;127;";
+    $this->plugin = $plugin;
+    self::$instance = $this;
+  }
+  public function generateWorld($levelName) {
 
-        $plugin->getServer()->getWorldManager()->generateLevel($levelName, $generator, $options);
-    }
+    $plugin = $this->plugin;
+    $plugin->getServer()->generateLevel($levelName, null, 'pocketmine\level\generator\Flat', ["preset" => "3;minecraft:air;127;"]);
+  }
 }

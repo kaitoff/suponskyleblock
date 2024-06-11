@@ -12,8 +12,8 @@ use pocketmine\network\mcpe\protocol\LevelSoundEventPacket;
 use pocketmine\Player;
 use pocketmine\block\Block;
 use pocketmine\block\Water;
-use pocketmine\block\BlockFactory; 
-use pocketmine\block\BlockIds;    
+use pocketmine\block\BlockFactory;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
 
 class Lava extends \pocketmine\block\Lava {
@@ -78,20 +78,26 @@ class Lava extends \pocketmine\block\Lava {
 			}
 		}
 
-	if ($colliding !== null) {
-            if ($this->getDamage() === 0) {
-                $this->liquidCollide($colliding, BlockFactory::getInstance()->get(BlockIds::OBSIDIAN));  
-            } else if ($this->getDamage() <= 4) {
-                if (SkyBlock::getInstance()->cfg->get("CobbleGen")) {
-                    $oresArray = SkyBlock::getInstance()->cfg->get("MagicCobbleGen Ores", []);
-                    $blockID = intval($oresArray[array_rand($oresArray)]);
-                    $this->liquidCollide($colliding, BlockFactory::getInstance()->get($blockID));  
-                } else {
-                    $this->liquidCollide($colliding, BlockFactory::getInstance()->get(BlockIds::COBBLESTONE)); 
-                }
-            }
-        }
-    }
+		if ($colliding !== null) {
+
+			if ($this->getDamage() === 0) {
+
+				$this->liquidCollide($colliding, BlockFactory::get(Block::OBSIDIAN));
+			} else if ($this->getDamage() <= 4) {
+
+				if (SkyBlock::getInstance()->cfg->get("CobbleGen")) {
+
+	        $oresArray = SkyBlock::getInstance()->cfg->get("MagicCobbleGen Ores", []);
+	        $blockID = intval($oresArray[array_rand($oresArray)]);
+
+	        $this->liquidCollide($colliding, Block::get($blockID));
+	      } else {
+
+	        $this->liquidCollide($colliding, BlockFactory::get(BlockIds::COBBLESTONE));
+	      }
+			}
+		}
+	}
 
 	protected function flowIntoBlock(Block $block, int $newFlowDecay): void {
 
@@ -121,10 +127,12 @@ class Lava extends \pocketmine\block\Lava {
 
 		$entity->resetFallDistance();
 	}
-public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null): bool {
-        $ret = $this->getPosition()->getWorld()->setBlock($this->getPosition(), $this, true, false); 
-        $this->getPosition()->getWorld()->scheduleDelayedBlockUpdate($this->getPosition(), $this->tickRate());
 
-        return $ret;
-    }
+	public function place(Item $item, Block $blockReplace, Block $blockClicked, int $face, Vector3 $clickVector, Player $player = null): bool {
+
+		$ret = $this->getLevel()->setBlock($this, $this, true, false);
+		$this->getLevel()->scheduleDelayedBlockUpdate($this, $this->tickRate());
+
+		return $ret;
+	}
 }

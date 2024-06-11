@@ -4,50 +4,71 @@ namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
 use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
 class Remove {
-    protected $plugin;
 
-    public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onRemoveCommand(CommandSender $sender, array $args): bool {
-        if (!$sender->hasPermission("skyblock.members")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-            return true;
-        }
+  public function __construct() {
 
-        $senderName = strtolower($sender->getName());
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []); 
-        if (count($args) < 2) {
-            $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §cUsage: /is remove <player>");
-            return true;
-        }
-        
-        $playerName = implode(" ", array_slice($args, 1));
+    self::$instance = $this;
+  }
 
-        
-        $player = $this->plugin->getServer()->getPlayerByPrefix($playerName);
+  public function onRemoveCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-        if (!$player || !$player instanceof Player || !array_key_exists($senderName, $skyblockArray) || !in_array($player->getName(), $skyblockArray[$senderName]["Members"])) {
-          $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông tồn tại hoặc không online.\n\n");
-          return true;
-        }
-        if ($player->getName() === $sender->getName()) {
-            $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §cBạn không thể xóa bạn khỏi đảo của bạn.\n\n");
-            return true;
-        }
+    if ($sender->hasPermission("skyblock.members")) {
 
-        unset($skyblockArray[$senderName]["Members"][array_search($player->getName(), $skyblockArray[$senderName]["Members"])]);
+      if (count($args) < 2) {
 
-        $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-        $this->plugin->skyblock->save();
-
-        $this->plugin->NCDAddRemoveForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã được xóa khỏi đảo.\n\n");
-
+        $sender->sendMessage($this->NCDPrefix."§cUsage: /is remove <player>");
         return true;
+      } else {
+
+        $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+        $senderName = strtolower($sender->getName());
+        $player = SkyBlock::getInstance()->getServer()->getPlayerExact(implode(" ", array_slice($args, 1)));
+        if (!$player) {
+
+          SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông tồn tại hoặc không online.\n\n");
+          return true;
+        } else {
+
+          if (array_key_exists($senderName, $skyblockArray)) {
+
+            if (in_array($player->getName(), $skyblockArray[$senderName]["Members"])) {
+
+              if ($player->getName() !== $sender->getName()) {
+
+                unset($skyblockArray[$senderName]["Members"][array_search($player->getName(), $skyblockArray[$senderName]["Members"])]);
+                SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+                SkyBlock::getInstance()->skyblock->save();
+                SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã được xóa khỏi đảo.\n\n");
+                return true;
+              } else {
+
+                SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §cBạn không thể xóa bạn khỏi đảo của bạn.\n\n");
+                return true;
+              }
+            } else {
+
+              SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §f" . $player->getName() . " §ckhông phải là thành viên của đảo bạn.\n\n");
+              return true;
+            }
+          } else {
+
+            SkyBlock::getInstance()->NCDAddRemoveForm($sender, "§l§c↣ §cBạn chưa có đảo nào cả.\n\n");
+            return true;
+          }
+        }
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cYou do not have the proper permissions to run this command.");
+      return true;
     }
+  }
 }

@@ -2,63 +2,82 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
-use pocketmine\block\{BlockFactory, Block, BlockLegacyIds as BlockIds};
+use pocketmine\block\BlockFactory;
+use pocketmine\block\Block;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
 
 class Set {
-    protected $plugin;
 
-    public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onSetCommand(CommandSender $sender): bool {
-        if ($sender->hasPermission("skyblock.set")) {
-            $skyblock = $this->plugin->skyblock;
-            $x1 = $skyblock->get("x1");
-            $x2 = $skyblock->get("x2");
-            $y1 = $skyblock->get("y1");
-            $y2 = $skyblock->get("y2");
-            $z1 = $skyblock->get("z1");
-            $z2 = $skyblock->get("z2");
-            $level = $sender->getWorld();
-            $blocksArray = [];
+  public function __construct() {
 
-            if ($skyblock->get("Pos1") && $skyblock->get("Pos2")) {
-                for ($x = min($x1, $x2); $x <= max($x1, $x2); $x++) {
-                    for ($y = min($y1, $y2); $y <= max($y1, $y2); $y++) {
-                        for ($z = min($z1, $z2); $z <= max($z1, $z2); $z++) {
-                            $block = $level->getWorld()->getBlockAt($x, $y, $z);
+    self::$instance = $this;
+  }
+  public function onSetCommand(CommandSender $sender): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-                            $blockID = $block->getId();
-                            $blockMeta = $block->getMeta();
+    if ($sender->hasPermission("skyblock.set")) {
 
-                            if (in_array($blockID, [BlockIds::LEAVES, BlockIds::LEAVES2])) {
-                                $noDecayMeta = [0, 4, 8, 9, 10, 11, 12, 13, 14, 15];
-                                if (!in_array($blockMeta, $noDecayMeta)) {
-                                    $blockDamage = 8; // Giả sử chuyển tất cả các loại lá thành Oak Leaves (không mục nát)
-                                }
-                            }
+      $x1 = SkyBlock::getInstance()->skyblock->get("x1");
+      $x2 = SkyBlock::getInstance()->skyblock->get("x2");
+      $y1 = SkyBlock::getInstance()->skyblock->get("y1");
+      $y2 = SkyBlock::getInstance()->skyblock->get("y2");
+      $z1 = SkyBlock::getInstance()->skyblock->get("z1");
+      $z2 = SkyBlock::getInstance()->skyblock->get("z2");
+      $level = $sender->getLevel();
+      $blocksArray = [];
 
-                            array_push($blocksArray, $blockID . " " . $blockMeta);
-                        }
-                    }
-                }
+      if (SkyBlock::getInstance()->skyblock->get("Pos1") && SkyBlock::getInstance()->skyblock->get("Pos2")) {
 
-                $skyblock->set("Blocks", $blocksArray);
-                $skyblock->set("Custom", true);
-                $skyblock->save();
-                $sender->sendMessage($this->plugin->NCDPrefix . "§aYour new SkyBlock custom island has been set!");
-                return true;
-            } else {
-                $sender->sendMessage($this->plugin->NCDPrefix . "§cYou must set the custom island position 1 and position 2 before using this command!");
-                return true;
+        for ($x = min($x1, $x2); $x <= max($x1, $x2); $x++) {
+
+          for ($y = min($y1, $y2); $y <= max($y1, $y2); $y++) {
+
+            for ($z = min($z1, $z2); $z <= max($z1, $z2); $z++) {
+
+              $block = $level->getBlockAt($x, $y, $z, true, false);
+              $blockID = $block->getID();
+              $blockDamage = $block->getDamage();
+
+              if ($blockID === BlockFactory::get(Block::LEAVES)->getID() || $blockID === BlockFactory::get(Block::LEAVES2)->getID()) {
+
+                $oakNoDecay = [0, 4, 12];
+                $spruceNoDecay = [1, 5, 13];
+                $birchNoDecay = [2, 6, 14];
+                $jungleNoDecay = [3, 7, 15];
+                $acaciaNoDecay = [0, 4, 12];
+                $darkNoDecay = [1, 5, 13];
+
+                if (in_array($blockDamage, $oakNoDecay) && $blockID === BlockFactory::get(Block::LEAVES)->getID()) $blockDamage = 8;
+                if (in_array($blockDamage, $spruceNoDecay) && $blockID === BlockFactory::get(Block::LEAVES)->getID()) $blockDamage = 9;
+                if (in_array($blockDamage, $birchNoDecay) && $blockID === BlockFactory::get(Block::LEAVES)->getID()) $blockDamage = 10;
+                if (in_array($blockDamage, $jungleNoDecay) && $blockID === BlockFactory::get(Block::LEAVES)->getID()) $blockDamage = 11;
+                if (in_array($blockDamage, $acaciaNoDecay) && $blockID === BlockFactory::get(Block::LEAVES2)->getID()) $blockDamage = 8;
+                if (in_array($blockDamage, $darkNoDecay) && $blockID === BlockFactory::get(Block::LEAVES2)->getID()) $blockDamage = 9;
+              }
+
+              array_push($blocksArray, $blockID . " " . $blockDamage);
             }
-        } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
-            return true;
+          }
         }
+        SkyBlock::getInstance()->skyblock->set("Blocks", $blocksArray);
+        SkyBlock::getInstance()->skyblock->set("Custom", true);
+        SkyBlock::getInstance()->skyblock->save();
+        $sender->sendMessage($this->NCDPrefix."§aYour new SkyBlock custom island has been set!");
+        return true;
+      } else {
+
+        $sender->sendMessage($this->NCDPrefix."§cYou must set the custom island position 1 and position 2 before using this command!");
+        return true;
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+      return true;
     }
+  }
 }

@@ -2,94 +2,149 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\item\VanillaItems;
-use pocketmine\player\GameMode;
-use pocketmine\world\Position;
-use pocketmine\world\World;
+use pocketmine\level\Position;
+use pocketmine\math\Vector3;
+use pocketmine\item\Item;
 
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 use RedCraftPE\RedSkyBlock\Tasks\Generate;
 
-class Reset
-{
-    protected $plugin;
+class Reset {
 
-    public function __construct(SkyBlock $plugin)
-    {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onResetCommand(CommandSender $sender): bool
-    {
-        if (!$sender->hasPermission("skyblock.reset")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-            return true;
-        }
+  public function __construct() {
 
-        $interval = $this->plugin->cfg->get("Interval");
-        $itemsArray = $this->plugin->cfg->get("Starting Items", []);
-        $levelName = $this->plugin->cfg->get("SkyBlockWorld");
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
-        $islands = $this->plugin->skyblock->get("Islands");
-        $initialSize = $this->plugin->cfg->get("Island Size");
-        $senderName = strtolower($sender->getName());
+    self::$instance = $this;
+  }
 
-        if ($levelName === "") {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou must set a SkyBlock world in order for this plugin to function properly.");
-            return true;
-        }
+  public function onResetCommand(CommandSender $sender): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-        $level = $this->plugin->getServer()->getWorldManager()->getWorldByName($levelName);
-        if ($level === null && !$this->plugin->getServer()->getWorldManager()->loadWorld($levelName)) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cThe world currently set as the SkyBlock world does not exist.");
-            return true;
-        }
+    if ($sender->hasPermission("skyblock.reset")) {
 
-        if (array_key_exists($senderName, $skyblockArray)) {
-            unset($skyblockArray[$senderName]);
-            $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-            $this->plugin->skyblock->save();
+      $interval = SkyBlock::getInstance()->cfg->get("Interval");
+      $itemsArray = SkyBlock::getInstance()->cfg->get("Starting Items", []);
+      $levelName = SkyBlock::getInstance()->cfg->get("SkyBlockWorld");
+      $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+      $islands = SkyBlock::getInstance()->skyblock->get("Islands");
+      $initialSize = SkyBlock::getInstance()->cfg->get("Island Size");
+      $senderName = strtolower($sender->getName());
+      $level = null;
 
-            if ($sender instanceof Player) {
-                $sender->getInventory()->clearAll();
-                $sender->sendMessage($this->plugin->NCDPrefix . "§aYour island has been completely reset.");
+      if ($levelName === "") {
 
-                if ($this->plugin->skyblock->get("Custom")) {
-                    $customX = $this->plugin->skyblock->get("CustomX") ?? 0; 
-                    $customY = $this->plugin->skyblock->get("CustomY") ?? 0;
-                    $customZ = $this->plugin->skyblock->get("CustomZ") ?? 0;
-                    $sender->teleport(new Position($islands * $interval + $customX, 15 + $customY, $islands * $interval + $customZ, $level));
-                } else {
-                    $sender->teleport(new Position($islands * $interval + 2, 15 + 3, $islands * $interval + 4, $level));
-                }
+        $sender->sendMessage($this->NCDPrefix."§cYou must set a SkyBlock world in order for this plugin to function properly.");
+        return true;
+      } else {
 
-                $sender->setGamemode(GameMode::SPECTATOR()); 
-                $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
+        if (SkyBlock::getInstance()->getServer()->isLevelLoaded($levelName)) {
 
-                foreach ($itemsArray as $items) {
-                    if (count($itemsArray) > 0) {
-                        $itemArray = explode(" ", $items);
-                        if (count($itemArray) === 3) {
-                            $id = intval($itemArray[0]);
-                            $damage = intval($itemArray[1]);
-                            $count = intval($itemArray[2]);
-                            $sender->getInventory()->addItem(VanillaItems::get($id, $damage, $count));
-                        }
-                    }
-                }
-                $senderPosition = $sender->getPosition();
-                $skyblockArray[$senderName] = [
-                    "Name" => $sender->getName() . "'s Island",
-                    
-                ];
-                $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-                $this->plugin->skyblock->save();
-            }
-            return true; 
+          $level = SkyBlock::getInstance()->getServer()->getLevelByName($levelName);
         } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have an island yet.");
+
+          if (SkyBlock::getInstance()->getServer()->loadLevel($levelName)) {
+
+            SkyBlock::getInstance()->getServer()->loadLevel($levelName);
+            $level = SkyBlock::getInstance()->getServer()->getLevelByName($levelName);
+          } else {
+
+            $sender->sendMessage($this->NCDPrefix."§cThe world currently set as the SkyBlock world does not exist.");
             return true;
+          }
         }
+      }
+
+      if (array_key_exists($senderName, $skyblockArray)) {
+
+        unset($skyblockArray[$senderName]);
+        SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+        SkyBlock::getInstance()->skyblock->save();
+        $sender->getInventory()->clearAll();
+        $sender->sendMessage($this->NCDPrefix."§aYour island has been completely reset.");
+
+        if (SkyBlock::getInstance()->skyblock->get("Custom")) {
+
+          $sender->teleport(new Position($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX"), 15 + SkyBlock::getInstance()->skyblock->get("CustomY"), $islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ"), $level));
+        } else {
+
+          $sender->teleport(new Position($islands * $interval + 2, 15 + 3, $islands * $interval + 4, $level));
+        }
+        $sender->setImmobile(true);
+        SkyBlock::getInstance()->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
+
+        foreach($itemsArray as $items) {
+
+          if (count($itemsArray) > 0) {
+
+            $itemArray = explode(" ", $items);
+            if (count($itemArray) === 3) {
+
+              $id = intval($itemArray[0]);
+              $damage = intval($itemArray[1]);
+              $count = intval($itemArray[2]);
+              $sender->getInventory()->addItem(Item::get($id, $damage, $count));
+            }
+          }
+        }
+
+        SkyBlock::getInstance()->skyblock->setNested("Islands", $islands + 1);
+        $skyblockArray[$senderName] = Array(
+          "Name" => $sender->getName() . "'s Island",
+          "Members" => [$sender->getName()],
+          "Banned" => [],
+          "Locked" => false,
+          "Value" => 0,
+          "Spawn" => Array(
+            "X" => $sender->getX(),
+            "Y" => $sender->getY(),
+            "Z" => $sender->getZ()
+          ),
+          "Area" => Array(
+            "start" => Array(
+              "X" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX")) - ($initialSize / 2),
+              "Y" => 0,
+              "Z" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ")) - ($initialSize / 2)
+            ),
+            "end" => Array(
+              "X" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX")) + ($initialSize / 2),
+              "Y" => 256,
+              "Z" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ")) + ($initialSize / 2)
+            )
+          ),
+          "Settings" => Array(
+            "Build" => "on",
+            "Break" => "on",
+            "Pickup" => "on",
+            "Anvil" => "on",
+            "Chest" => "on",
+            "CraftingTable" => "off",
+            "Fly" => "on",
+            "Hopper" => "on",
+            "Brewing" => "off",
+            "Beacon" => "on",
+            "Buckets" => "off",
+            "PVP" => "on",
+            "FlintAndSteel" => "off",
+            "Furnace" => "on",
+            "EnderChest" => "on"
+          )
+        );
+        SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+        SkyBlock::getInstance()->skyblock->save();
+        return true;
+      } else {
+
+        $sender->sendMessage($this->NCDPrefix."§cYou do not have an island yet.");
+        return true;
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cYou do not have the proper permissions to run this command.");
+      return true;
     }
+  }
 }

@@ -2,26 +2,27 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\item\VanillaItems;
-use pocketmine\player\GameMode;
-use pocketmine\player\Player;
 use pocketmine\world\Position;
-use pocketmine\math\Vector3;
+use pocketmine\player\GameMode;
+use pocketmine\item\VanillaItems;
+use pocketmine\item\Item;
+use pocketmine\item\ItemIds;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
-use RedCraftPE\RedSkyBlock\Tasks\Generate;
+use RedCraftPE\RedSkyBlock\Tasks\Generate; 
 
 class Create
 {
-
     protected $plugin;
-
-    public function __construct(Skyblock $plugin)
+    
+    public function __construct(SkyBlock $plugin)
     {
         $this->plugin = $plugin;
     }
-
-    public function onCreateCommand(CommandSender $sender): bool
+    
+     public function onCreateCommand(CommandSender $sender): bool
     {
         if ($sender->hasPermission("skyblock.create")) {
             $interval = $this->plugin->cfg->get("Interval");
@@ -31,86 +32,105 @@ class Create
             $islands = $this->plugin->skyblock->get("Islands");
             $initialSize = $this->plugin->cfg->get("Island Size");
             $senderName = strtolower($sender->getName());
+            
+            // Kiểm tra $levelName
+            if (empty($levelName)) {
+                $sender->sendMessage($this->plugin->NCDPrefix . "§cVui lòng thiết lập tên thế giới SkyBlock trong config.yml.");
+                return true;
+            }
 
-           if ($sender instanceof Player) {
-    $this->plugin->NCDMenuForm($sender, "", $this->plugin);
-} else {
-    $sender->sendMessage($this->plugin->NCDPrefix . "Lệnh này chỉ có thể được sử dụng bởi người chơi.");
-    return true;
-}
-
-
-            $level = $this->plugin->getServer()->getWorldManager()->getWorldByName($levelName);
-            if (!$level) {
-                $sender->sendMessage($this->plugin->NCDPrefix . "§cThế giới SkyBlock chưa được tải. Vui lòng thử lại sau.");
+            $worldManager = $this->plugin->getServer()->getWorldManager();
+            $level = $worldManager->getWorldByName($levelName);
+            
+            // Kiểm tra level
+            if ($level === null) {
+                $sender->sendMessage($this->plugin->NCDPrefix . "§cThế giới SkyBlock không tồn tại hoặc chưa được tải.");
                 return true;
             }
 
             if (array_key_exists($senderName, $skyblockArray)) {
                 $this->plugin->getServer()->getCommandMap()->dispatch($sender, "is ncdgo");
                 return true;
-            }
-
-            $islandX = $islands * $interval + ($this->plugin->skyblock->get("CustomX") ?? 0);
-            $islandZ = $islands * $interval + ($this->plugin->skyblock->get("CustomZ") ?? 0);
-            $islandY = 15 + ($this->plugin->skyblock->get("CustomY") ?? 3);
-
-            $sender->teleport(new Position($islandX, $islandY, $islandZ, $level));
-            $sender->setGamemode(GameMode::SPECTATOR());
-
-            $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
-
-            // Thêm vật phẩm vào inventory
-            foreach ($itemsArray as $items) {
-                if (!empty($itemsArray)) {
-                    $itemArray = explode(" ", $items);
-                    if (count($itemArray) === 3) {
-                        $id = intval($itemArray[0]);
-                        $meta = intval($itemArray[1]);
-                        $count = intval($itemArray[2]);
-                        $sender->getInventory()->addItem(VanillaItems::get($id, $meta, $count));
-                    }
+            } else {
+                if (SkyBlock::getInstance()->skyblock->get("Custom")) {
+                    $x = $islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX");
+                    $y = 15 + SkyBlock::getInstance()->skyblock->get("CustomY");
+                    $z = $islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ");
+                    $sender->teleport(new Position($x, $y, $z, $level));
+                } else {
+                    $sender->teleport(new Position($islands * $interval + 2, 15 + 3, $islands * $interval + 4, $level));
                 }
-            }
-            
-            $senderPosition = $sender->getPosition();
-            $skyblockArray[$senderName] = [
-                "Name" => "",
-                "Members" => [$sender->getName()],
-                "Banned" => [],
-                "Locked" => false,
-                "Value" => 0,
-                "Spawn" => $senderPosition->asVector3(),
-                "Area" => [
-                  "start" => (new Position(($islands * $interval + ($this->plugin->skyblock->get("CustomX") ?? 0)) - ($initialSize / 2), 0, ($islands * $interval + ($this->plugin->skyblock->get("CustomZ") ?? 0)) - ($initialSize / 2), $level))->asVector3(), // Sử dụng Position để tính toán tọa độ
-                  "end" => (new Position(($islands * $interval + ($this->plugin->skyblock->get("CustomX") ?? 0)) + ($initialSize / 2), 256, ($islands * $interval + ($this->plugin->skyblock->get("CustomZ") ?? 0)) + ($initialSize / 2), $level))->asVector3(),
-                ],
-                "Settings" => [
-                  "Build" => "on",
-                  "Break" => "on",
-                  "Pickup" => "on",
-                  "Anvil" => "on",
-                  "Chest" => "on",
-                  "CraftingTable" => "on",
-                  "Fly" => "on",
-                  "Hopper" => "on",
-                  "Brewing" => "on",
-                  "Beacon" => "on",
-                  "Buckets" => "on",
-                  "PVP" => "on",
-                  "FlintAndSteel" => "on",
-                  "Furnace" => "on",
-                  "EnderChest" => "on"
-                ]
-              ];
-            $this->plugin->skyblock->setNested("Islands", $islands + 1);
-            $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-            $this->plugin->skyblock->save();
+                $sender->setGamemode(GameMode::SURVIVAL()); 
 
-            $sender->sendMessage($this->plugin->NCDPrefix."§aBạn đã tạo đảo thành công. Đồ đã vào túi đồ của bạn.");
-            return true;
-         } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
+                $this->plugin->getScheduler()->scheduleDelayedTask(new Generate($islands, $level, $interval, $sender), 10);
+        
+foreach ($itemsArray as $items) {
+    if (count($itemsArray) > 0) {
+        $itemArray = explode(":", $items);
+        if (count($itemArray) >= 3) {
+            $id = constant(ItemIds::class . "::" . strtoupper($itemArray[0]));
+            $meta = intval($itemArray[1]);
+            $count = intval($itemArray[2]);
+            $item = Item::get($id, $meta, $count); 
+            $sender->getInventory()->addItem($item); 
+        }
+    }
+}
+
+
+
+
+
+
+                SkyBlock::getInstance()->skyblock->setNested("Islands", $islands + 1);
+                $skyblockArray[$senderName] = array(
+                    "Name" => "",
+                    "Members" => array($sender->getName()),
+                    "Banned" => array(),
+                    "Locked" => false,
+                    "Value" => 0,
+                    "Spawn" => array(
+                        "X" => $sender->getLocation()->getX(), 
+                        "Y" => $sender->getLocation()->getY(),
+                        "Z" => $sender->getLocation()->getZ()
+                    ),
+                    "Area" => array(
+                        "start" => array(
+                            "X" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX")) - ($initialSize / 2),
+                            "Y" => 0,
+                            "Z" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ")) - ($initialSize / 2)
+                        ),
+                        "end" => array(
+                            "X" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomX")) + ($initialSize / 2),
+                            "Y" => 256,
+                            "Z" => ($islands * $interval + SkyBlock::getInstance()->skyblock->get("CustomZ")) + ($initialSize / 2)
+                        )
+                    ),
+                    "Settings" => array(
+                        "Build" => "on",
+                        "Break" => "on",
+                        "Pickup" => "on",
+                        "Anvil" => "on",
+                        "Chest" => "on",
+                        "CraftingTable" => "on",
+                        "Fly" => "on",
+                        "Hopper" => "on",
+                        "Brewing" => "on",
+                        "Beacon" => "on",
+                        "Buckets" => "on",
+                        "PVP" => "on",
+                        "FlintAndSteel" => "on",
+                        "Furnace" => "on",
+                        "EnderChest" => "on"
+                    )
+                );
+                SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+                SkyBlock::getInstance()->skyblock->save();
+                $sender->sendMessage($this->plugin->NCDPrefix . "§aBạn đã tạo đảo thành công. Đồ đã vào túi đồ của bạn.");
+                return true;
+            }
+       } else {
+            $sender->sendMessage($this->plugin->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
             return true;
         }
     }

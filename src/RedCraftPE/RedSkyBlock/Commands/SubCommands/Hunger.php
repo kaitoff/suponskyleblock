@@ -2,37 +2,58 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
-class Hunger
-{
-    private $plugin;
+class Hunger {
 
-    public function __construct(SkyBlock $plugin)
-    {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onHungerCommand(CommandSender $sender, array $args): bool
-    {
-        if (!$sender->hasPermission("skyblock.hunger")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
-            return true;
-        }
+  public function __construct() {
 
-        if (count($args) < 2) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cUsage: /is hunger <on/off>");
-            return true;
-        }
+    self::$instance = $this;
+  }
 
-        $hunger = ($args[1] === "on"); 
-        $this->plugin->cfg->set("Hunger", $hunger);
-        $this->plugin->cfg->save();
+  public function onHungerCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-        $sender->sendMessage($this->plugin->NCDPrefix . "§aHunger has been " . ($hunger ? "enabled" : "disabled") . ".");
-        $this->plugin->getLogger()->info("Hunger setting changed to: " . ($hunger ? "on" : "off")); // Ghi log
+    if ($sender->hasPermission("skyblock.hunger")) {
 
+      $hunger = SkyBlock::getInstance()->cfg->get("Hunger");
+
+      if (count($args) < 2) {
+
+        $sender->sendMessage($this->NCDPrefix."§cUsage: /is hunger <on/off>");
         return true;
+      } else {
+
+        if ($args[1] === "on") {
+
+          $hunger = "on";
+          SkyBlock::getInstance()->cfg->set("Hunger", $hunger);
+          SkyBlock::getInstance()->cfg->save();
+          $sender->sendMessage($this->NCDPrefix."§aHunger has been enabled.");
+          return true;
+        } else if ($args[1] === "off") {
+
+          $hunger = "off";
+          SkyBlock::getInstance()->cfg->set("Hunger", $hunger);
+          SkyBlock::getInstance()->cfg->save();
+          $sender->sendMessage($this->NCDPrefix."§aHunger has been disabled.");
+          return true;
+        } else {
+
+          $sender->sendMessage($this->NCDPrefix."§cUsage: /is hunger <on/off>");
+          return true;
+        }
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+      return true;
     }
+  }
 }

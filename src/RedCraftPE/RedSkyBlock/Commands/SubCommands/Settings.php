@@ -19,81 +19,87 @@ use RedCraftPE\RedSkyBlock\Commands\Island;
 
 class Settings {
 
-    protected $plugin;
-  
-    public function __construct(SkyBlock $plugin) {
-    $this->plugin = $plugin;
-  }
+  private static $instance;
 
- public function onSettingsCommand(CommandSender $sender): bool {
+  public function __construct() {
+
+    self::$instance = $this;
+  }
+  public function onSettingsCommand(CommandSender $sender): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
+
+    $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+
     if ($sender->hasPermission("skyblock.island.settings")) {
-        $this->plugin->createSettingsInventory($sender, $this->plugin);
-        $sender->sendMessage($this->plugin->NCDPrefix . "§aIsland Settings Menu Opened.");
+
+      if (array_key_exists(strtolower($sender->getName()), $skyblockArray)) {
+
+        $this->createSettingsInventory($sender);
+        $sender->sendMessage($this->NCDPrefix."§aIsland Settings Menu Opened.");
         return true;
+      } else {
+
+        $sender->sendMessage($this->NCDPrefix."§cYou do not have an island yet.");
+        return true;
+      }
     } else {
-        $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-        return true;
+
+      $sender->sendMessage($this->NCDPrefix."§cYou do not have the proper permissions to run this command.");
+      return true;
     }
   }
   public function createSettingsInventory(Player $player) {
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
-        $name = strtolower($player->getName());
 
-        $position = $player->getPosition();
-        $blockPos = $position->add(0, 3, 0)->asVector3(); // Sử dụng Position để tính toán tọa độ
+    $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+    $name = strtolower($player->getName());
+    $xPos = (int) $player->getX();
+    $yPos = (int) $player->getY();
+    $zPos = (int) $player->getZ();
 
-        // Đặt block trước
-        $block = VanillaBlocks::CHEST();
-        $block->setPosition($blockPos);
-        $player->getWorld()->setBlock($blockPos, $block); // Sử dụng setBlock()
+    $item = Item::get(Item::CHEST, 0, 1)->setCustomName(TextFormat::RED . $skyblockArray[strtolower($player->getName())]["Name"] . " Settings:");
 
-        $player->getWorld()->sendBlocks([$player], [$block]); // Gửi cập nhật block
+    $block = Block::get(Block::CHEST);
+    $block->x = $xPos;
+    $block->y = $yPos + 3;
+    $block->z = $zPos;
+    $block->level = $player->getLevel();
 
-        $nbt = CompoundTag::create()
-            ->setString(Tile::TAG_ID, Tile::CHEST)
-            ->setInt(Tile::TAG_X, $blockPos->x)
-            ->setInt(Tile::TAG_Y, $blockPos->y)
-            ->setInt(Tile::TAG_Z, $blockPos->z)
-            ->setListTag(Tile::TAG_ITEMS, []);
+    $block->level->sendBlocks([$player], [$block]);
+    EventListener::getListener()->addFakeBlock($block);
 
-        $inv = new FakeInventory();
-        EventListener::getListener()->addFakeInv($inv);
-        
-$items = [
-            0 => VanillaItems::COBBLESTONE()->setCustomName("Build Protection")->setLore([$skyblockArray[$name]["Settings"]["Build"]]),
-            2 => VanillaItems::DIAMOND_PICKAXE()->setCustomName("Break Protection")->setLore([$skyblockArray[$name]["Settings"]["Break"]]),
-            4 => VanillaItems::GUNPOWDER()->setCustomName("Pickup Protection")->setLore([$skyblockArray[$name]["Settings"]["Pickup"]]),
-6 => VanillaItems::ANVIL()->setCustomName("Anvil Protection")->setLore([$skyblockArray[$name]["Settings"]["Anvil"]]),
-8 => VanillaItems::CHEST()->setCustomName("Chest Protection")->setLore([$skyblockArray[$name]["Settings"]["Chest"]]),
-9 => VanillaItems::CRAFTING_TABLE()->setCustomName("Crafting Table")->setLore([$skyblockArray[$name]["Settings"]["CraftingTable"]]),
-11 => VanillaItems::ELYTRA()->setCustomName("Flying")->setLore([$skyblockArray[$name]["Settings"]["Fly"]]),
-13 => VanillaItems::HOPPER()->setCustomName("Hopper Protection")->setLore([$skyblockArray[$name]["Settings"]["Hopper"]]),
-15 => VanillaItems::BREWING_STAND()->setCustomName("Brewing")->setLore([$skyblockArray[$name]["Settings"]["Brewing"]]),
-17 => VanillaItems::BEACON()->setCustomName("Beacon Protection")->setLore([$skyblockArray[$name]["Settings"]["Beacon"]]),
-18 => VanillaItems::BUCKET()->setCustomName("Buckets")->setLore([$skyblockArray[$name]["Settings"]["Buckets"]]),
-20 => VanillaItems::DIAMOND_SWORD()->setCustomName("PVP Protection")->setLore([$skyblockArray[$name]["Settings"]["PVP"]]),
-22 => VanillaItems::FLINT_AND_STEEL()->setCustomName("Flint and Steel")->setLore([$skyblockArray[$name]["Settings"]["FlintAndSteel"]]),
-24 => VanillaItems::FURNACE()->setCustomName("Furnace Protection")->setLore([$skyblockArray[$name]["Settings"]["Furnace"]]),
-26 => VanillaItems::ENDER_CHEST()->setCustomName("Ender Chest")->setLore([$skyblockArray[$name]["Settings"]["EnderChest"]])
+    $nbt = Chest::createNBT(new Vector3($xPos, $yPos + 3, $zPos), null, $item, $player);
+    $tile = Tile::createTile(Tile::CHEST, $player->getLevel(), $nbt);
 
-];
- foreach ($items as $slot => $item) {
-            $inv->setItem($slot, $item);
-        }
-        $player->addWindow($inv);
-        $packet = UpdateBlockPacket::create(
-            $blockPos->x, $blockPos->y, $blockPos->z,
-            UpdateBlockPacket::FLAG_NONE,
-            VanillaBlocks::CHEST()->getFullId()
-        );
-        $player->getNetworkSession()->sendDataPacket($packet);
+    $pk = new BlockEntityDataPacket();
+    $pk->x = $xPos;
+    $pk->y = $yPos + 3;
+    $pk->z = $zPos;
+    $pk->namedtag = (new NetworkLittleEndianNBTStream())->write($nbt);
 
-        $pk = new UpdateBlockPacket();
-        $pk->blockPosition = $blockPos;
-        $pk->flags = UpdateBlockPacket::FLAG_NETWORK;
-        $pk->dataLayer = 0;
-        $pk->newData = $block->getFullId();
-        $player->getNetworkSession()->sendDataPacket($pk);
-        EventListener::getListener()->addFakeBlock($block);
-    }
+    $player->sendDataPacket($pk);
+
+    $inv = $tile->getInventory();
+    $inv->setItem(0, Item::get(Item::COBBLESTONE, 0, 1)->setCustomName("Build Protection")->setLore([$skyblockArray[$name]["Settings"]["Build"]]));
+    $inv->setItem(2, Item::get(Item::DIAMOND_PICKAXE, 0, 1)->setCustomName("Break Protection")->setLore([$skyblockArray[$name]["Settings"]["Break"]]));
+    $inv->setItem(4, Item::get(Item::GUNPOWDER, 0, 1)->setCustomName("Pickup Protection")->setLore([$skyblockArray[$name]["Settings"]["Pickup"]]));
+    $inv->setItem(6, Item::get(Item::ANVIL, 0, 1)->setCustomName("Anvil Protection")->setLore([$skyblockArray[$name]["Settings"]["Anvil"]]));
+    $inv->setItem(8, Item::get(Item::CHEST, 0, 1)->setCustomName("Chest Protection")->setLore([$skyblockArray[$name]["Settings"]["Chest"]]));
+    $inv->setItem(9, Item::get(Item::CRAFTING_TABLE, 0, 1)->setCustomName("Crafting Table")->setLore([$skyblockArray[$name]["Settings"]["CraftingTable"]]));
+    $inv->setItem(11, Item::get(Item::ELYTRA, 0, 1)->setCustomName("Flying")->setLore([$skyblockArray[$name]["Settings"]["Fly"]]));
+    $inv->setItem(13, Item::get(Item::HOPPER, 0, 1)->setCustomName("Hopper Protection")->setLore([$skyblockArray[$name]["Settings"]["Hopper"]]));
+    $inv->setItem(15, Item::get(Item::BREWING_STAND_BLOCK, 0, 1)->setCustomName("Brewing")->setLore([$skyblockArray[$name]["Settings"]["Brewing"]]));
+    $inv->setItem(17, Item::get(Item::BEACON, 0, 1)->setCustomName("Beacon Protection")->setLore([$skyblockArray[$name]["Settings"]["Beacon"]]));
+    $inv->setItem(18, Item::get(Item::BUCKET, 0, 1)->setCustomName("Buckets")->setLore([$skyblockArray[$name]["Settings"]["Buckets"]]));
+    $inv->setItem(20, Item::get(Item::DIAMOND_SWORD, 0, 1)->setCustomName("PVP Protection")->setLore([$skyblockArray[$name]["Settings"]["PVP"]]));
+    $inv->setItem(22, Item::get(Item::FLINT_STEEL, 0, 1)->setCustomName("Flint and Steel")->setLore([$skyblockArray[$name]["Settings"]["FlintAndSteel"]]));
+    $inv->setItem(24, Item::get(Item::FURNACE, 0, 1)->setCustomName("Furnace Protection")->setLore([$skyblockArray[$name]["Settings"]["Furnace"]]));
+    $inv->setItem(26, Item::get(Item::ENDER_CHEST, 0, 1)->setCustomName("Ender Chest")->setLore([$skyblockArray[$name]["Settings"]["EnderChest"]]));
+
+    $player->addWindow($inv);
+    EventListener::getListener()->addFakeInv($inv);
+  }
+  public static function getInstance(): self {
+
+    return self::$instance;
+  }
 }

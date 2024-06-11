@@ -4,35 +4,37 @@ namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
 use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
 
 class Pos2 {
 
-    protected $plugin;
+  private static $instance;
 
-    public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
+  public function __construct() {
+
+    self::$instance = $this;
+  }
+  public function onPos2Command(CommandSender $sender): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
+
+    if ($sender->hasPermission("skyblock.pos")) {
+
+      $xPos = round($sender->getX());
+      $yPos = round($sender->getY());
+      $zPos = round($sender->getZ());
+
+      SkyBlock::getInstance()->skyblock->set("x2", $xPos);
+      SkyBlock::getInstance()->skyblock->set("y2", $yPos);
+      SkyBlock::getInstance()->skyblock->set("z2", $zPos);
+      SkyBlock::getInstance()->skyblock->set("Pos2", true);
+      SkyBlock::getInstance()->skyblock->save();
+      $sender->sendMessage("§l§cSkyBlock §e↣ §aPosition 2 has been set at" . TextFormat::WHITE . " {$xPos}, {$yPos}, {$zPos}.");
+      return true;
+    } else {
+
+      $sender->sendMessage("§l§cSkyBlock §e↣ §cYou do not have the proper permissions to run this command.");
+      return true;
     }
-  
-    public function onPos2Command(CommandSender $sender): bool {
-        if (!$sender->hasPermission("skyblock.pos")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-            return true;
-        }
-        
-        $position = $sender->getPosition();
-        $xPos = $position->getFloorX();
-        $yPos = $position->getFloorY();
-        $zPos = $position->getFloorZ();
-
-        $skyblock = $this->plugin->skyblock;
-        $skyblock->set("x2", $xPos);
-        $skyblock->set("y2", $yPos);
-        $skyblock->set("z2", $zPos);
-        $skyblock->set("Pos2", true);
-        $skyblock->save();
-
-        $sender->sendMessage($this->plugin->NCDPrefix . "§aPosition 2 has been set at" . TextFormat::WHITE . " {$xPos}, {$yPos}, {$zPos}.");
-        return true;
-    }
+  }
 }

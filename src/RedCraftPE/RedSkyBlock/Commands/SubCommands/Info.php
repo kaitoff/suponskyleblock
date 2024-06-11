@@ -1,29 +1,38 @@
 <?php
+
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
-class Info
-{
+use jojoe77777\FormAPI\SimpleForm;
 
-    protected $plugin;
-    
-  public function __construct(Skyblock $plugin){
-	$this->plugin = $plugin;
+class Info {
+
+  private static $instance;
+
+  public function __construct() {
+
+    self::$instance = $this;
   }
 
-  public function onInfoCommand(CommandSender $sender, array $args): bool
-  {
+  public function onInfoCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
+
     if ($sender->hasPermission("skyblock.info")) {
-      $skyblockArray = $this->plugin->skyblock->get("SkyBlock"); // Dùng biến $plugin thay vì SkyBlock::getInstance()
+
+      $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock");
 
       if (count($args) < 2) {
-        $sender->sendMessage($this->plugin->NCDPrefix . "§cUsage: /is info <player>");
+
+        $sender->sendMessage("§l§cSkyBlock §e↣ §cUsage: /is info <player>");
         return true;
       } else {
-        $name = strtolower(implode(" ", array_slice($args, 1)));
 
+        $name = strtolower(implode(" ", array_slice($args, 1)));
         if (array_key_exists($name, $skyblockArray)) {
 
           $islandName = $skyblockArray[$name]["Name"];
@@ -54,12 +63,14 @@ class Info
 				"§l§c↣ §aTình trạng đảo: §f{$isLocked}\n");
           return true;
         } else {
-       SkyBlock::getInstance()->NCDInfoForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông có đảo nào cả..", SkyBlock::getInstance()); // Thêm tham số SkyBlock::getInstance()
+
+          SkyBlock::getInstance()->NCDInfoForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông có đảo nào cả..");
           return true;
         }
       }
     } else {
-      $sender->sendMessage($this->plugin->NCDPrefix . ",§cBạn không có quyền để sử dụng lệnh này.");
+
+      $sender->sendMessage($this->NCDPrefix.",§cBạn không có quyền để sử dụng lệnh này.");
       return true;
     }
   }

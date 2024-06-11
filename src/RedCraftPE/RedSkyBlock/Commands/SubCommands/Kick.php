@@ -4,64 +4,81 @@ namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
 use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
-use pocketmine\world\Position;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
 class Kick {
 
-    protected $plugin;
+  private static $instance;
 
-    public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
-    }
+  public function __construct() {
 
-    public function onKickCommand(CommandSender $sender, array $args): bool {
-        if (!$sender->hasPermission("skyblock.kick")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
-            return true;
-        }
+    self::$instance = $this;
+  }
 
-        $senderName = strtolower($sender->getName());
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
+  public function onKickCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-        if (!array_key_exists($senderName, $skyblockArray)) {
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §cBạn chưa có đảo nào cả.\n\n");
-            return true;
-        }
+    if ($sender->hasPermission("skyblock.kick")) {
+
+      $senderName = strtolower($sender->getName());
+      $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+
+      if (array_key_exists($senderName, $skyblockArray)) {
 
         if (count($args) < 2) {
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §cUsage: /is kick <player>");
-            return true;
-        }
 
-        $playerName = implode(" ", array_slice($args, 1));
-
-        $player = $this->plugin->getServer()->getPlayerByPrefix($playerName);
-
-        if (!$player || !$player instanceof Player) {
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §f" . $playerName . " §ckhông tồn tại hoặc không online.\n\n");
-            return true;
-        }
-
-        if ($player->getName() === $sender->getName()) {
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §cBạn không thể tự đuổi mình ra khỏi đảo của bạn.\n\n");
-            return true;
-        }
-
-        $playerPosition = $player->getPosition();
-        $start = Position::fromObject($skyblockArray[$senderName]["Area"]["start"], $this->plugin->level);
-        $end = Position::fromObject($skyblockArray[$senderName]["Area"]["end"], $this->plugin->level);
-
-        if ($playerPosition->x > $start->x && $playerPosition->y > $start->y && $playerPosition->z > $start->z &&
-            $playerPosition->x < $end->x && $playerPosition->y < $end->y && $playerPosition->z < $end->z) {
-            $player->teleport($this->plugin->getServer()->getWorldManager()->getDefaultWorld()?->getSafeSpawn());
-            $player->sendMessage($this->plugin->NCDPrefix . "§aNgười chơi §f" . $sender->getName() . " §ađã đuổi bạn khỏi đảo của họ.");
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã bị đuổi khỏi đảo của bạn.\n\n");
+          $sender->sendMessage($this->NCDPrefix."§cUsage: /is kick <player>");
+          return true;
         } else {
-            $this->plugin->NCDKickForm($sender, "§l§c↣ §f" . $player->getName() . " §ckhông có trên đảo của bạn.\n\n");
-        }
 
+          $player = SkyBlock::getInstance()->getServer()->getPlayerExact(implode(" ", array_slice($args, 1)));
+          if (!$player) {
+
+            SkyBlock::getInstance()->NCDKickForm($sender, "§l§c↣ §f" . implode(" ", array_slice($args, 1)) . " §ckhông tồn tại hoặc không online.\n\n");
+            return true;
+          } else {
+
+            if ($player !== $sender) {
+
+              $playerX = $player->getX();
+              $playerY = $player->getY();
+              $playerZ = $player->getZ();
+              $startX = $skyblockArray[$senderName]["Area"]["start"]["X"];
+              $startY = $skyblockArray[$senderName]["Area"]["start"]["Y"];
+              $startZ = $skyblockArray[$senderName]["Area"]["start"]["Z"];
+              $endX = $skyblockArray[$senderName]["Area"]["end"]["X"];
+              $endY = $skyblockArray[$senderName]["Area"]["end"]["Y"];
+              $endZ = $skyblockArray[$senderName]["Area"]["end"]["Z"];
+
+              if ($playerX > $startX && $playerY > $startY && $playerZ > $startZ && $playerX < $endX && $playerY < $endY && $playerZ < $endZ) {
+
+                $player->teleport($player->getSpawn());
+                $player->sendMessage($this->NCDPrefix."§aNgười chơi §f" . $sender->getName() . " §ađã đuổi bạn khỏi đảo của họ.");
+                SkyBlock::getInstance()->NCDKickForm($sender, "§l§c↣ §f" . $player->getName() . " §ađã bị đuổi khỏi đảo của bạn.\n\n");
+                return true;
+              } else {
+
+                SkyBlock::getInstance()->NCDKickForm($sender, "§l§c↣ §f" . $player->getName() . " §ckhông có trên đảo của bạn.\n\n");
+                return true;
+              }
+            } else {
+
+              SkyBlock::getInstance()->NCDKickForm($sender, "§l§c↣ §cBạn không thể tự đuổi mình ra khỏi đảo của bạn.\n\n");
+              return true;
+            }
+          }
+        }
+      } else {
+
+        SkyBlock::getInstance()->NCDKickForm($sender, "§l§c↣ §cBạn chưa có đảo nào cả.\n\n");
         return true;
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+      return true;
     }
+  }
 }

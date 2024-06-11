@@ -2,39 +2,52 @@
 
 namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
+use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
-class Unlock
-{
-    protected $plugin;
+class Unlock {
 
-    public function __construct(SkyBlock $plugin) {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onUnlockCommand(CommandSender $sender): bool
-    {
-        if (!$sender->hasPermission("skyblock.lock")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have the proper permissions to run this command.");
-            return true;
-        }
+  public function __construct() {
 
-        $senderName = strtolower($sender->getName());
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []); 
+    self::$instance = $this;
+  }
 
-        if (array_key_exists($senderName, $skyblockArray)) {
-            $isLocked = $skyblockArray[$senderName]["Locked"];
-            $skyblockArray[$senderName]["Locked"] = !$isLocked;
-            $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-            $this->plugin->skyblock->save();
+  public function onUnlockCommand(CommandSender $sender): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
 
-            $message = $isLocked ? "§aĐảo của bạn đã được mở khóa." : "§aĐảo của bạn đã được khóa.";
-            $sender->sendMessage($this->plugin->NCDPrefix . $message);
+    if ($sender->hasPermission("skyblock.lock")) {
+
+      $senderName = strtolower($sender->getName());
+      $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
+
+      if (array_key_exists($senderName, $skyblockArray)) {
+
+        if ($skyblockArray[$senderName]["Locked"] === false) {
+
+          SkyBlock::getInstance()->getServer()->getCommandMap()->dispatch($sender, "is ncdlock");
+          return true;
         } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cYou do not have an island yet.");
-        }
 
+          $skyblockArray[$senderName]["Locked"] = false;
+          SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+          SkyBlock::getInstance()->skyblock->save();
+          $sender->sendMessage($this->NCDPrefix."§aĐảo của bạn đã được mở khóa.");
+          return true;
+        }
+      } else {
+
+        $sender->sendMessage($this->NCDPrefix."§cYou do not have an island yet.");
         return true;
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cYou do not have the proper permissions to run this command.");
+      return true;
     }
+  }
 }

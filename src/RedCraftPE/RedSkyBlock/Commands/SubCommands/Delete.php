@@ -4,50 +4,57 @@ namespace RedCraftPE\RedSkyBlock\Commands\SubCommands;
 
 use pocketmine\utils\TextFormat;
 use pocketmine\command\CommandSender;
-use pocketmine\player\Player;
+
 use RedCraftPE\RedSkyBlock\SkyBlock;
+use RedCraftPE\RedSkyBlock\Commands\Island;
 
-class Delete
-{
-    protected $plugin;
+class Delete {
 
-    public function __construct(SkyBlock $plugin)
-    {
-        $this->plugin = $plugin;
-    }
+  private static $instance;
 
-    public function onDeleteCommand(CommandSender $sender, array $args): bool
-    {
-        if (!$sender->hasPermission("skyblock.delete")) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cBạn không có quyền để sử dụng lệnh này.");
-            return true;
-        }
+  public function __construct() {
 
-        if (count($args) < 2) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cUsage: /is delete <player>");
-            return true;
-        }
+    self::$instance = $this;
+  }
+
+  public function onDeleteCommand(CommandSender $sender, array $args): bool {
+  	$this->NCDPrefix = SkyBlock::getInstance()->NCDPrefix;
+
+    if ($sender->hasPermission("skyblock.delete")) {
+
+      if (count($args) < 2) {
+
+        $sender->sendMessage($this->NCDPrefix."§cUsage: /is delete <player>");
+        return true;
+      } else {
 
         $playerName = strtolower(implode(" ", array_slice($args, 1)));
-        $player = $this->plugin->getServer()->getPlayerByPrefix($playerName);
+        $player = SkyBlock::getInstance()->getServer()->getPlayerExact(implode(" ", array_slice($args, 1)));
+        if ($player) {
 
-        if ($player instanceof Player) {
-            $player->teleport($this->plugin->getServer()->getWorldManager()->getDefaultWorld()?->getSafeSpawn()); 
-            $player->sendMessage($this->plugin->NCDPrefix . "§cYour island has been deleted by a server administrator");
+          $player->teleport(SkyBlock::getInstance()->getServer()->getDefaultLevel()->getSafeSpawn());
+          $player->sendMessage($this->NCDPrefix."§cYour island has been deleted by a server administrator");
         }
-
-        $skyblockArray = $this->plugin->skyblock->get("SkyBlock", []);
+        $skyblockArray = SkyBlock::getInstance()->skyblock->get("SkyBlock", []);
 
         if (array_key_exists($playerName, $skyblockArray)) {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§aYou have successfully deleted §f" . $skyblockArray[$playerName]["Members"][0] . "'s§a island.");
-            unset($skyblockArray[$playerName]);
 
-            $this->plugin->skyblock->set("SkyBlock", $skyblockArray);
-            $this->plugin->skyblock->save();
-            return true;
+          $sender->sendMessage($this->NCDPrefix."§aYou have successfully deleted §f" . $skyblockArray[$playerName]["Members"][0] . "'§as island.");
+          unset($skyblockArray[$playerName]);
+
+          SkyBlock::getInstance()->skyblock->set("SkyBlock", $skyblockArray);
+          SkyBlock::getInstance()->skyblock->save();
+          return true;
         } else {
-            $sender->sendMessage($this->plugin->NCDPrefix . "§cThis player does not have an island to delete.");
-            return true;
+
+          $sender->sendMessage($this->NCDPrefix."§cThis player does not have an island to delete.");
+          return true;
         }
+      }
+    } else {
+
+      $sender->sendMessage($this->NCDPrefix."§cBạn không có quyền để sử dụng lệnh này.");
+      return true;
     }
+  }
 }
