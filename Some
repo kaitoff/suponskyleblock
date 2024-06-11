@@ -1,49 +1,49 @@
 public function onDamage(EntityDamageByEntityEvent $event) {
+
     $entity = $event->getEntity();
+    $entityX = $entity->getX();
+    $entityY = $entity->getY();
+    $entityZ = $entity->getZ();
+    $damager = $event->getDamager();
+    $plugin = $this->plugin;
+    $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
+    $islandOwner = "";
 
-    // Kiểm tra xem entity có phải là Player
-    if ($entity instanceof Player) {
+    if ($entity instanceof Player && $damager instanceof Player) {
 
-        $entityPos = $entity->getPosition(); // Lấy vị trí của entity
-        $damager = $event->getDamager();
-        $plugin = $this->plugin;
-        $skyblockArray = $plugin->skyblock->get("SkyBlock", []);
-        $islandOwner = "";
+      if ($plugin->cfg->get("PVP") === "off") {
 
-        // Kiểm tra xem người gây sát thương có phải là Player
-        if ($damager instanceof Player) {
+        if ($entity->getWorld()->getFolderName() === $plugin->cfg->get("SkyBlockWorld")) {
 
-            if ($plugin->cfg->get("PVP") === "off") {
-                // Kiểm tra xem world có phải là SkyBlockWorld không
-                if ($entity->getWorld()->getFolderName() === $plugin->cfg->get("SkyBlockWorld")) {
-                    $event->cancel(); // Không cho phép PvP trên SkyBlockWorld nếu tắt PvP
-                }
-            } else {
-                // Kiểm tra xem có trong khu vực đảo nào
-                foreach ($skyblockArray as $skyblocks => $islandData) {
-                    $start = Position::fromObject(
-                        new Vector3($islandData["Area"]["start"]["X"], $islandData["Area"]["start"]["Y"], $islandData["Area"]["start"]["Z"]),
-                        $this->level
-                    );
-                    $end = Position::fromObject(
-                        new Vector3($islandData["Area"]["end"]["X"], $islandData["Area"]["end"]["Y"], $islandData["Area"]["end"]["Z"]),
-                        $this->level
-                    );
-
-                    if ($entityPos->x >= $start->getX() &&
-                        $entityPos->z >= $start->getZ() &&
-                        $entityPos->x <= $end->getX() &&
-                        $entityPos->z <= $end->getZ()) {
-                        $islandOwner = $skyblocks;
-                        break;
-                    }
-                }
-
-                // Nếu tìm thấy đảo và PVP được bật trên đảo đó thì hủy bỏ sự kiện
-                if ($islandOwner !== "" && $skyblockArray[$islandOwner]["Settings"]["PVP"] === "on") {
-                    $event->cancel();
-                }
-            }
+          $event->setCancelled();
         }
+      } else {
+
+        foreach (array_keys($skyblockArray) as $skyblocks) {
+
+          $startX = $skyblockArray[$skyblocks]["Area"]["start"]["X"];
+          $startY = $skyblockArray[$skyblocks]["Area"]["start"]["Y"];
+          $startZ = $skyblockArray[$skyblocks]["Area"]["start"]["Z"];
+          $endX = $skyblockArray[$skyblocks]["Area"]["end"]["X"];
+          $endY = $skyblockArray[$skyblocks]["Area"]["end"]["Y"];
+          $endZ = $skyblockArray[$skyblocks]["Area"]["end"]["Z"];
+
+          if ($entityX > $startX && $entityY > $startY && $entityZ > $startZ && $entityX < $endX && $entityY < $endY && $entityZ < $endZ) {
+
+            $islandOwner = $skyblocks;
+            break;
+          }
+        }
+        if ($islandOwner === "") {
+
+          return;
+        } else {
+
+          if ($skyblockArray[$islandOwner]["Settings"]["PVP"] === "on") {
+
+            $event->setCancelled(true);
+          }
+        }
+      }
     }
-}
+  }
